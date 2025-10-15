@@ -1,0 +1,119 @@
+# ===============================================
+#   .gitignore cho dự án ASP.NET Core 8 (Razor Pages)
+#   Áp dụng mô hình 3 lớp (Presentation, BLL, DAL)
+# ===============================================
+
+## Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+*.exe
+*.dll
+*.pdb
+*.cache
+*.config
+*.mdb
+*.dbmdl
+
+## Publish output
+publish/
+out/
+dist/
+artifacts/
+
+## Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+## NuGet
+*.nupkg
+*.snupkg
+*.nuspec
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.deps.json
+*.runtimeconfig.json
+
+## Environment and secrets
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+.env
+.env.*
+
+## Rider / JetBrains IDEs
+.idea/
+*.iml
+
+## VS Code
+.vscode/
+.history/
+*.code-workspace
+
+## Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+## Database files
+*.mdf
+*.ldf
+*.db
+*.bak
+*.sqlproj
+*.sqlite
+*.db-shm
+*.db-wal
+
+## OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+## Logs
+*.log
+logs/
+Log/
+Logs/
+
+## Temporary files
+*.tmp
+*.temp
+~$*
+*.bak
+*.old
+
+## Publish profiles
+Properties/PublishProfiles/
+*.pubxml
+*.publishsettings
+
+## User specific files
+*.rsuser
+*.vspscc
+*.vssscc
+
+## EF Core Migrations cache
+Migrations/*.Designer.cs
+Migrations/*Snapshot.cs
+
+# ===============================================
+#   End of .gitignore
+# ===============================================
