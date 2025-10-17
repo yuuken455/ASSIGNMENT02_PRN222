@@ -5,21 +5,21 @@ using DAL;
 using DAL.IRepositories;
 using DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
-using EVDManagement.SignalR; // <-- QUAN TRỌNG: using đúng namespace chứa ModelHub
+using EVDManagement.SignalR; // <— thêm
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 
-// DbContext
+// Register DbContext
 builder.Services.AddDbContext<DBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// AutoMapper
+// Register AutoMapper profiles
 builder.Services.AddAutoMapper(typeof(AutoMappingProfile));
 
-// Repositories
+// Register Repositories
 builder.Services.AddScoped<ICustomerRepo, CustomerRepo>();
 builder.Services.AddScoped<IStaffRepo, StaffRepo>();
 builder.Services.AddScoped<IInventoryRepo, InventoryRepo>();
@@ -30,7 +30,7 @@ builder.Services.AddScoped<IColorRepo, ColorRepo>();
 builder.Services.AddScoped<IModelRepo, ModelRepo>();
 builder.Services.AddScoped<ITestDriveAppointmentRepo, TestDriveAppointmentRepo>();
 
-// Services
+// Register Services
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IStaffService, StaffService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
@@ -41,12 +41,12 @@ builder.Services.AddScoped<IColorService, ColorService>();
 builder.Services.AddScoped<IModelService, ModelService>();
 builder.Services.AddScoped<ITestDriveAppointmentService, TestDriveAppointmentService>();
 
-// >>> SignalR (bắt buộc để DI resolve IHubContext<T>)
-builder.Services.AddSignalR();
+// >>> SignalR
+builder.Services.AddSignalR(); // <— thêm dòng này
 
 var app = builder.Build();
 
-// Pipeline
+// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -62,7 +62,7 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 
-// >>> Map hub endpoint (client sẽ connect tới /hubs/models)
-app.MapHub<ModelHub>("/hubs/models");
+// >>> Map SignalR hubs
+app.MapHub<ModelHub>("/hubs/models"); // <— thêm endpoint (đổi tên/đường dẫn tùy bạn)
 
 app.Run();

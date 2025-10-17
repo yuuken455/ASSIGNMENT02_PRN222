@@ -1,0 +1,97 @@
+﻿@model EVDManagement.Pages.Catalog.IndexModel
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">Create Version</div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="CreateVersion">
+                    <div class="mb-2">
+                        <label asp-for="NewVersion.ModelId" class="form-label">Model</label>
+                        <select asp-for="NewVersion.ModelId" class="form-select">
+                            <option value="">-- Select model --</option>
+                            @foreach (var m in Model.Models)
+                            {
+                                <option value="@m.ModelId">@m.ModelName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="NewVersion.VersionName" class="form-label"></label>
+                        <input asp-for="NewVersion.VersionName" class="form-control" />
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6"><label asp-for="NewVersion.BatteryCapacity" class="form-label"></label><input asp-for="NewVersion.BatteryCapacity" class="form-control" /></div>
+                        <div class="col-6"><label asp-for="NewVersion.RangeKm" class="form-label"></label><input asp-for="NewVersion.RangeKm" class="form-control" /></div>
+                    </div>
+                    <div class="row g-2 mt-1">
+                        <div class="col-6"><label asp-for="NewVersion.Seat" class="form-label"></label><input asp-for="NewVersion.Seat" class="form-control" /></div>
+                        <div class="col-6"><label asp-for="NewVersion.BasePrice" class="form-label"></label><input asp-for="NewVersion.BasePrice" class="form-control" /></div>
+                    </div>
+                    <button class="btn btn-primary mt-2" type="submit">Create</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">Edit Version</div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="UpdateVersion">
+                    <input asp-for="EditVersion.VersionId" type="hidden" />
+                    <div class="mb-2">
+                        <label asp-for="EditVersion.ModelId" class="form-label">Model</label>
+                        <select asp-for="EditVersion.ModelId" class="form-select">
+                            @foreach (var m in Model.Models)
+                            {
+                                <option value="@m.ModelId">@m.ModelName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-2"><label asp-for="EditVersion.VersionName" class="form-label"></label><input asp-for="EditVersion.VersionName" class="form-control" /></div>
+                    <div class="row g-2">
+                        <div class="col-6"><label asp-for="EditVersion.BatteryCapacity" class="form-label"></label><input asp-for="EditVersion.BatteryCapacity" class="form-control" /></div>
+                        <div class="col-6"><label asp-for="EditVersion.RangeKm" class="form-label"></label><input asp-for="EditVersion.RangeKm" class="form-control" /></div>
+                    </div>
+                    <div class="row g-2 mt-1">
+                        <div class="col-6"><label asp-for="EditVersion.Seat" class="form-label"></label><input asp-for="EditVersion.Seat" class="form-control" /></div>
+                        <div class="col-6"><label asp-for="EditVersion.BasePrice" class="form-label"></label><input asp-for="EditVersion.BasePrice" class="form-control" /></div>
+                    </div>
+                    <button class="btn btn-success mt-2" type="submit">Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">Version List</div>
+            <div class="card-body table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead><tr><th>ID</th><th>Model</th><th>Name</th><th>BasePrice</th><th class="text-end">Actions</th></tr></thead>
+                    <tbody>
+                        @foreach (var v in Model.Versions)
+                        {
+                            var modelName = Model.Models.FirstOrDefault(x => x.ModelId == v.ModelId)?.ModelName ?? "";
+                            <tr>
+                                <td>@v.VersionId</td>
+                                <td>@modelName</td>
+                                <td>@v.VersionName</td>
+                                <td>@v.BasePrice.ToString("N0")</td>
+                                <td class="text-end">
+                                    <form method="post" asp-page-handler="LoadVersion" class="d-inline">
+                                        <input type="hidden" name="id" value="@v.VersionId" />
+                                        <button class="btn btn-sm btn-secondary">Load</button>
+                                    </form>
+                                    <form method="post" asp-page-handler="DeleteVersion" class="d-inline" onsubmit="return confirm('Delete this version?');">
+                                        <input type="hidden" name="id" value="@v.VersionId" />
+                                        <button class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

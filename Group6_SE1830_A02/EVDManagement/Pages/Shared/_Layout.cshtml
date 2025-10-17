@@ -143,8 +143,8 @@
 
             <!-- Quản lý Model (entity Model) -->
             <li>
-                <a class="sidebar-link @(activeWhenStartsWith("/models"))"
-                   asp-page="/Models/Index">🚗 Dòng xe (Models)</a>
+                <a class="sidebar-link @(currentPage.StartsWith("/catalog") ? "active" : "")"
+                   asp-page="/Catalog/Index">📚 Catalog</a>
             </li>
 
             <!-- Gợi ý các khu khác (chưa làm thì để # hoặc trỏ đúng page khi có) -->
