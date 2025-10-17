@@ -10,8 +10,4 @@
     <ProjectReference Include="..\BLL\BLL.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="SignalR\" />
-  </ItemGroup>
-
 </Project>

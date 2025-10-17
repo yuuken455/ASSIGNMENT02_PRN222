@@ -1,0 +1,30 @@
+﻿@page "{id:int}"
+@model EVDManagement.Pages.Models.EditModel
+@{
+    ViewData["Title"] = "Edit Model";
+}
+<h2>Edit Model</h2>
+<hr />
+
+<form method="post">
+    <input type="hidden" asp-for="Item.ModelId" />
+    <div class="mb-3">
+        <label asp-for="Item.ModelName" class="form-label"></label>
+        <input asp-for="Item.ModelName" class="form-control" />
+        <span asp-validation-for="Item.ModelName" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Item.Segment" class="form-label"></label>
+        <input asp-for="Item.Segment" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Item.Description" class="form-label"></label>
+        <textarea asp-for="Item.Description" class="form-control" rows="4"></textarea>
+    </div>
+    <button class="btn btn-primary" type="submit">Save</button>
+    <a asp-page="Index" class="btn btn-outline-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

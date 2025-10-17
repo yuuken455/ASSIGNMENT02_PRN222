@@ -1,0 +1,37 @@
+﻿@page
+@model EVDManagement.Pages.Models.IndexModel
+@{
+    ViewData["Title"] = "Models";
+}
+<h2 class="mb-3">Models</h2>
+
+<p><a asp-page="Create" class="btn btn-primary">Create New</a></p>
+
+<table class="table table-striped">
+    <thead>
+        <tr><th>Id</th><th>Name</th><th>Segment</th><th></th></tr>
+    </thead>
+    <tbody id="models-body">
+        @foreach (var m in Model.Items)
+        {
+            <tr>
+                <td>@m.ModelId</td>
+                <td>@m.ModelName</td>
+                <td>@m.Segment</td>
+                <td class="text-end">
+                    <a asp-page="Edit" asp-route-id="@m.ModelId" class="btn btn-sm btn-secondary">Edit</a>
+                    <a asp-page="Delete" asp-route-id="@m.ModelId" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder().withUrl("/hubs/models").build();
+        connection.on("ModelsChanged", () => location.reload());
+        connection.start();
+    </script>
+}

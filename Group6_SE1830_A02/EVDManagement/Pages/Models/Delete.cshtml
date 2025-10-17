@@ -1,0 +1,22 @@
+﻿@page "{id:int}"
+@model EVDManagement.Pages.Models.DeleteModel
+@{
+    ViewData["Title"] = "Delete Model";
+}
+<h2>Delete Model</h2>
+<hr />
+
+@if (Model.Item is null)
+{
+    <div class="alert alert-danger">Item not found.</div>
+}
+else
+{
+    <div class="alert alert-warning">
+        Are you sure you want to delete <strong>@Model.Item.ModelName</strong>?
+    </div>
+    <form method="post">
+        <button class="btn btn-danger" type="submit">Yes, delete</button>
+        <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+    </form>
+}
