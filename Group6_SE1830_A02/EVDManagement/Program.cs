@@ -1,15 +1,17 @@
-using BLL.Mappings;
 using BLL.IServices;
+using BLL.Mappings;
 using BLL.Services;
 using DAL;
 using DAL.IRepositories;
 using DAL.Repositories;
+using EVDManagement.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddSignalR();
 
 // Register DbContext
 builder.Services.AddDbContext<DBContext>(options =>
@@ -58,5 +60,6 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
+app.MapHub<CustomerHub>("/customerHub");
 
 app.Run();
