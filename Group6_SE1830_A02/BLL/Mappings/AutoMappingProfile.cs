@@ -1,7 +1,10 @@
-﻿using AutoMapper;
+using AutoMapper;
 using BLL.DTOs;
-// alias sẵn cho tránh System.Version (nếu bạn đang dùng global usings thì giữ nguyên)
+using BLL.DTOs.CustomerDTOs;
+using DAL.Entities;
 using DALModel = DAL.Entities.Model;
+using DALVersion = DAL.Entities.Version;
+using DALColor = DAL.Entities.Color;
 using DALInventory = DAL.Entities.Inventory;
 
 namespace BLL.Mappings
@@ -10,14 +13,21 @@ namespace BLL.Mappings
     {
         public AutoMappingProfile()
         {
-            // Model
+            // Customer mappings
+            CreateMap<Customer, CustomerDTO>().ReverseMap();
+            CreateMap<CreateCustomerDTO, Customer>();
+            CreateMap<UpdateCustomerDTO, Customer>();
+            CreateMap<CustomerDTO, UpdateCustomerDTO>().ReverseMap();
+
+            // Model mappings
             CreateMap<DALModel, ModelDto>().ReverseMap();
 
-            // Version & Color
+            // Version & Color mappings
             CreateMap<DALVersion, VersionDto>().ReverseMap();
             CreateMap<DALColor, ColorDto>().ReverseMap();
 
-            CreateMap<DALInventory, InventoryDto>().ReverseMap();
+            // Inventory mappings
+            CreateMap<DALInventory, InventoryDTO>().ReverseMap();
         }
     }
 }
