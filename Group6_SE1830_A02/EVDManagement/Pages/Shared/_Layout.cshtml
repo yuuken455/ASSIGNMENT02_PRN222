@@ -134,33 +134,28 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <h2><i class="fa-solid fa-bolt me-2"></i>EV Dealer</h2>
-        <ul class="sidebar-menu">
-            <!-- Trang chủ -->
-            <li>
-                <a class="sidebar-link @(activeWhenStartsWith("/index"))"
-                   asp-page="/Index">🏠 Trang chủ</a>
-            </li>
+<ul>
+    <!-- Trang chủ -->
+    <li class="sidebar-link @(activeWhenStartsWith("/Index"))" asp-page="/Index">
+        🏠 Trang chủ
+    </li>
 
-            <!-- Quản lý Model (entity Model) -->
-            <li>
-                <a class="sidebar-link @(currentPage.StartsWith("/catalog") ? "active" : "")"
-                   asp-page="/Catalog/Index">📚 Catalog</a>
-            </li>
+    <!-- Quản lý Model (entity Model) -->
+    <li class="sidebar-link @(CurrentPage.StartsWith("/catalog") ? "active" : "")"
+        asp-page="/Catalog/Index">
+        🚗 Catalog
+    </li>
 
-            <!-- Gợi ý các khu khác (chưa làm thì để # hoặc trỏ đúng page khi có) -->
-            <li>
-                <a class="sidebar-link"
-                   asp-page="/Orders/Index">📝 Đơn hàng</a>
-            </li>
-            <li>
-                <a class="sidebar-link"
-                   asp-page="/Appointments/Index">📅 Lịch hẹn</a>
-            </li>
-            <li>
-                <a class="sidebar-link"
-                   asp-page="/Customers/Index">👤 Khách hàng</a>
-            </li>
-        </ul>
+    <!-- Đơn hàng -->
+    <li class="sidebar-link" asp-page="/Orders/Index">📦 Đơn hàng</li>
+
+    <!-- Lịch hẹn -->
+    <li class="sidebar-link" asp-page="/Appointments/Index">📅 Lịch hẹn</li>
+
+    <!-- Khách hàng -->
+    <li class="sidebar-link" asp-page="/Customers/Index">👤 Khách hàng</li>
+</ul>
+
     </div>
 
     <!-- Content -->
@@ -174,28 +169,29 @@
         </div>
 
         <div class="main">
-            <!-- Flash message -->
-            @if (TempData["Msg"] is string msg)
-            {
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    @msg
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            }
-            @RenderBody()
+            <div id="notification-container">
+    @if (TempData["Msg"] is string msg)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @msg
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+    }
+</div>
 
-        <footer>
-            &copy; @DateTime.Now.Year - Quản lý bán xe điện qua đại lý
-        </footer>
-    </div>
+@RenderBody()
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<footer>
+    &copy; @DateTime.Now.Year - Quản lý bán xe điện qua đại lý
+</footer>
 
-    @* Nếu bạn muốn dùng SignalR chung cho nhiều trang, có thể thêm script nền ở đây *@
-    @* <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script> *@
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    @RenderSection("Scripts", required: false)
+@* Nếu bạn dùng SignalR chung cho nhiều trang *@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
+@RenderSection("Scripts", required: false)
 </body>
 </html>
+

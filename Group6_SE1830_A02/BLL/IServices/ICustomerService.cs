@@ -5,10 +5,9 @@ namespace BLL.IServices
 {
     public interface ICustomerService
     {
-        Task<ICollection<CustomerDTO>> GetAllCustomersAsync();
-        Task AddCustomerAsync(CreateCustomerDTO createCustomerDto);
         Task<CustomerDTO?> GetCustomerByIdAsync(int id);
-        Task UpdateCustomerAsync(UpdateCustomerDTO customerDto);
+        Task UpdateCustomerAsync(UpdateCustomerDTO updateCustomerDto);
         Task DeleteCustomerAsync(int id);
+
     }
 }
