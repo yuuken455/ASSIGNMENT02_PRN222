@@ -1,0 +1,89 @@
+﻿@model EVDManagement.Pages.Catalog.IndexModel
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">Create Color</div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="CreateColor">
+                    <div class="mb-2">
+                        <label asp-for="NewColor.VersionId" class="form-label">Version</label>
+                        <select asp-for="NewColor.VersionId" class="form-select">
+                            <option value="">-- Select version --</option>
+                            @foreach (var v in Model.Versions)
+                            {
+                                <option value="@v.VersionId">@v.VersionName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-2"><label asp-for="NewColor.ColorName" class="form-label"></label><input asp-for="NewColor.ColorName" class="form-control" /></div>
+                    <div class="mb-2"><label asp-for="NewColor.HexCode" class="form-label"></label><input asp-for="NewColor.HexCode" class="form-control" placeholder="#RRGGBB" /></div>
+                    <div class="mb-2"><label asp-for="NewColor.ExtraCost" class="form-label"></label><input asp-for="NewColor.ExtraCost" class="form-control" /></div>
+                    <button class="btn btn-primary" type="submit">Create</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">Edit Color</div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="UpdateColor">
+                    <input asp-for="EditColor.ColorId" type="hidden" />
+                    <div class="mb-2">
+                        <label asp-for="EditColor.VersionId" class="form-label">Version</label>
+                        <select asp-for="EditColor.VersionId" class="form-select">
+                            @foreach (var v in Model.Versions)
+                            {
+                                <option value="@v.VersionId">@v.VersionName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-2"><label asp-for="EditColor.ColorName" class="form-label"></label><input asp-for="EditColor.ColorName" class="form-control" /></div>
+                    <div class="mb-2"><label asp-for="EditColor.HexCode" class="form-label"></label><input asp-for="EditColor.HexCode" class="form-control" /></div>
+                    <div class="mb-2"><label asp-for="EditColor.ExtraCost" class="form-label"></label><input asp-for="EditColor.ExtraCost" class="form-control" /></div>
+                    <button class="btn btn-success" type="submit">Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">Color List</div>
+            <div class="card-body table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead><tr><th>ID</th><th>Version</th><th>Name</th><th>Hex</th><th>Extra</th><th class="text-end">Actions</th></tr></thead>
+                    <tbody>
+                        @foreach (var c in Model.Colors)
+                        {
+                            var verName = Model.Versions.FirstOrDefault(x => x.VersionId == c.VersionId)?.VersionName ?? "";
+                            <tr>
+                                <td>@c.ColorId</td>
+                                <td>@verName</td>
+                                <td>@c.ColorName</td>
+                                <td>
+                                    @c.HexCode
+                                    @if (!string.IsNullOrWhiteSpace(c.HexCode))
+                                    {
+                                        <span class="ms-2 d-inline-block rounded-circle" style="width:14px;height:14px;background:@c.HexCode;border:1px solid #ddd;"></span>
+                                    }
+                                </td>
+                                <td>@(c.ExtraCost?.ToString("N0") ?? "-")</td>
+                                <td class="text-end">
+                                    <form method="post" asp-page-handler="LoadColor" class="d-inline">
+                                        <input type="hidden" name="id" value="@c.ColorId" />
+                                        <button class="btn btn-sm btn-secondary">Load</button>
+                                    </form>
+                                    <form method="post" asp-page-handler="DeleteColor" class="d-inline" onsubmit="return confirm('Delete this color?');">
+                                        <input type="hidden" name="id" value="@c.ColorId" />
+                                        <button class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

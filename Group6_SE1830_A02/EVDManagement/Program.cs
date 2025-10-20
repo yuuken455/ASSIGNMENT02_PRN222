@@ -6,6 +6,8 @@ using DAL.IRepositories;
 using DAL.Repositories;
 using EVDManagement.SignalR;
 using Microsoft.EntityFrameworkCore;
+using EVDManagement.SignalR; // ← thêm
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,13 +44,15 @@ builder.Services.AddScoped<IColorService, ColorService>();
 builder.Services.AddScoped<IModelService, ModelService>();
 builder.Services.AddScoped<ITestDriveAppointmentService, TestDriveAppointmentService>();
 
+// >>> SignalR
+builder.Services.AddSignalR(); // <— thêm dòng này
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -61,5 +65,8 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 app.MapHub<CustomerHub>("/customerHub");
+
+// >>> Map SignalR hubs
+app.MapHub<ModelHub>("/hubs/models"); // <— thêm endpoint (đổi tên/đường dẫn tùy bạn)
 
 app.Run();

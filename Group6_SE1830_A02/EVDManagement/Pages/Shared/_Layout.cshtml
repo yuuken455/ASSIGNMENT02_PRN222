@@ -1,9 +1,16 @@
-﻿<!DOCTYPE html>
+﻿@{
+    // Lấy đường dẫn Razor Page hiện tại, ví dụ: "/Models/Index"
+    var currentPage = (ViewContext.RouteData.Values["page"]?.ToString() ?? "").ToLower();
+    Func<string, string> activeWhenStartsWith = (prefix) =>
+        currentPage.StartsWith(prefix.ToLower()) ? "active" : "";
+}
+
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Quản lý bán xe điện</title>
+    <title>@(ViewData["Title"] ?? "Dashboard") - Quản lý bán xe điện</title>
 
     <!-- Bootstrap & Font Awesome -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
@@ -121,25 +128,34 @@
             font-size: 13px;
             color: #64748b;
         }
-
-        .header h4 {
-            font-size: 16px;
-        }
-
-        }
     </style>
 </head>
 <body>
     <!-- Sidebar -->
     <div class="sidebar">
         <h2><i class="fa-solid fa-bolt me-2"></i>EV Dealer</h2>
-        <ul class="sidebar-menu">
-            <li><a class="sidebar-link active" href="#">🏠 Trang chủ</a></li>
-            <li><a class="sidebar-link" href="#">📦 Danh sách xe</a></li>
-            <li><a class="sidebar-link" href="#">📝 Đơn hàng</a></li>
-            <li><a class="sidebar-link" href="#">📅 Lịch hẹn</a></li>
-            <li><a class="sidebar-link" asp-page="/Customers/Index">👤 Khách hàng</a></li>
-        </ul>
+<ul>
+    <!-- Trang chủ -->
+    <li class="sidebar-link @(activeWhenStartsWith("/Index"))" asp-page="/Index">
+        🏠 Trang chủ
+    </li>
+
+    <!-- Quản lý Model (entity Model) -->
+    <li class="sidebar-link @(CurrentPage.StartsWith("/catalog") ? "active" : "")"
+        asp-page="/Catalog/Index">
+        🚗 Catalog
+    </li>
+
+    <!-- Đơn hàng -->
+    <li class="sidebar-link" asp-page="/Orders/Index">📦 Đơn hàng</li>
+
+    <!-- Lịch hẹn -->
+    <li class="sidebar-link" asp-page="/Appointments/Index">📅 Lịch hẹn</li>
+
+    <!-- Khách hàng -->
+    <li class="sidebar-link" asp-page="/Customers/Index">👤 Khách hàng</li>
+</ul>
+
     </div>
 
     <!-- Content -->
@@ -148,22 +164,34 @@
             <h4>@(ViewData["Title"] ?? "Dashboard")</h4>
             <div class="user">
                 Xin chào, <strong>Admin</strong> |
-                <a href="#">Đăng xuất</a>
+                <a asp-page="/Logout">Đăng xuất</a>
             </div>
         </div>
 
         <div class="main">
-            <div id="notification-container"></div>
-
-            @RenderBody()
+            <div id="notification-container">
+    @if (TempData["Msg"] is string msg)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @msg
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+    }
+</div>
 
-        <footer>
-            &copy; @DateTime.Now.Year - Quản lý bán xe điện qua đại lý
-        </footer>
-    </div>
+@RenderBody()
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    @RenderSection("Scripts", required: false)
+<footer>
+    &copy; @DateTime.Now.Year - Quản lý bán xe điện qua đại lý
+</footer>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+@* Nếu bạn dùng SignalR chung cho nhiều trang *@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
+@RenderSection("Scripts", required: false)
 </body>
 </html>
+
