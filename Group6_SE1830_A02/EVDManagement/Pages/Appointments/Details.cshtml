@@ -1,0 +1,33 @@
+﻿@page "{id:int}"
+@model EVDManagement.Pages.Appointments.DetailsModel
+@{
+    ViewData["Title"] = "Chi tiết lịch hẹn";
+}
+
+<h2 class="mb-3">Chi tiết lịch hẹn #@Model.Item!.AppointmentId</h2>
+
+<dl class="row">
+    <dt class="col-sm-3">Ngày</dt>
+    <dd class="col-sm-9">@Model.Item!.DateTime.ToString("dd/MM/yyyy")</dd>
+
+    <dt class="col-sm-3">Giờ</dt>
+    <dd class="col-sm-9">@Model.Item!.DateTime.ToString("HH:mm")</dd>
+
+    <dt class="col-sm-3">Khách hàng</dt>
+    <dd class="col-sm-9">@Model.Item!.CustomerName ?? ("KH#" + Model.Item!.CustomerId)</dd>
+
+    <dt class="col-sm-3">Phiên bản</dt>
+    <dd class="col-sm-9">@Model.Item!.VersionName ?? ("V#" + Model.Item!.CarVersionId)</dd>
+
+    <dt class="col-sm-3">Màu</dt>
+    <dd class="col-sm-9">@Model.Item!.ColorName ?? ("M#" + Model.Item!.ColorId)</dd>
+
+    <dt class="col-sm-3">Trạng thái</dt>
+    <dd class="col-sm-9">@Model.Item!.Status</dd>
+
+    <dt class="col-sm-3">Phản hồi</dt>
+    <dd class="col-sm-9">@Model.Item!.Feedback</dd>
+</dl>
+
+<a class="btn btn-secondary" href="/Appointments">Quay lại</a>
+<a class="btn btn-primary" href="/Appointments/Edit/@Model.Item!.AppointmentId">Sửa</a>

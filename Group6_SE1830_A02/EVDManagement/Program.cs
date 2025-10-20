@@ -5,7 +5,9 @@ using DAL;
 using DAL.IRepositories;
 using DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
-using EVDManagement.SignalR; // <— thêm
+using EVDManagement.SignalR;
+using DAL.IRepository;
+using DAL.Repository; // <— thêm
 
 var builder = WebApplication.CreateBuilder(args);
 

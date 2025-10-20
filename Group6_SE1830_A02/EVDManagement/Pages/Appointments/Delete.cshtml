@@ -1,0 +1,18 @@
+﻿@page "{id:int}"
+@model EVDManagement.Pages.Appointments.DeleteModel
+@{
+    ViewData["Title"] = "Xóa lịch hẹn";
+}
+
+<h2 class="mb-4 text-danger">Xóa lịch hẹn</h2>
+
+<div class="alert alert-warning">
+    Bạn có chắc chắn muốn xóa lịch hẹn của khách hàng <strong>@Model.Item.CustomerName</strong>
+    vào lúc <strong>@Model.Item.DateTime.ToString("HH:mm dd/MM/yyyy")</strong> không?
+</div>
+
+<form method="post">
+    <input type="hidden" asp-for="Item.AppointmentId" />
+    <button type="submit" class="btn btn-danger">Xóa</button>
+    <a asp-page="/Appointments/Index" class="btn btn-secondary">Hủy</a>
+</form>

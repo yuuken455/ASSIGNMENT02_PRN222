@@ -1,0 +1,113 @@
+﻿@page "{id:int}"
+@model EVDManagement.Pages.Appointments.EditModel
+@{
+    ViewData["Title"] = "Sửa lịch hẹn";
+}
+
+<h2 class="mb-4">Sửa lịch hẹn</h2>
+
+<form method="post" class="row g-3">
+    <div asp-validation-summary="All" class="text-danger mb-2"></div>
+    <input type="hidden" asp-for="Item.AppointmentId" />
+
+    <div class="col-md-3">
+        <label class="form-label">Khách hàng</label>
+        <select asp-for="Item.CustomerId" class="form-select" required>
+            @foreach (var c in Model.Customers)
+            {
+                <option value="@c.CustomerId">@c.FullName</option>
+            }
+        </select>
+        <span asp-validation-for="Item.CustomerId" class="text-danger"></span>
+    </div>
+
+    <!-- Mẫu xe: chỉ dùng để lọc phiên bản, KHÔNG post -->
+    <div class="col-md-3">
+        <label class="form-label">Mẫu xe</label>
+        <select id="ModelSelect" class="form-select">
+            <option value="">-- Chọn mẫu xe --</option>
+            @foreach (var m in Model.Models)
+            {
+                <option value="@m.ModelId">@m.ModelName</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Phiên bản</label>
+        <select asp-for="Item.CarVersionId" id="VersionSelect" class="form-select" required>
+            <option value="">-- Chọn phiên bản --</option>
+            @foreach (var v in Model.Versions)
+            {
+                <option value="@v.VersionId" data-model="@v.ModelId">@v.VersionName</option>
+            }
+        </select>
+        <span asp-validation-for="Item.CarVersionId" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Màu xe</label>
+        <select asp-for="Item.ColorId" class="form-select" required>
+            @foreach (var c in Model.Colors)
+            {
+                <option value="@c.ColorId">@c.ColorName</option>
+            }
+        </select>
+        <span asp-validation-for="Item.ColorId" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">Thời gian lái thử</label>
+        <input asp-for="Item.DateTime" type="datetime-local" class="form-control" required />
+        <span asp-validation-for="Item.DateTime" class="text-danger"></span>
+        <small class="text-muted">* Khung giờ hợp lệ: 08:00 – 17:30, mỗi lượt 60 phút.</small>
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">Trạng thái</label>
+        <select asp-for="Item.Status" class="form-select">
+            <option value="Pending">Pending</option>
+            <option value="Scheduled">Scheduled</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+        </select>
+    </div>
+
+    <div class="col-md-12">
+        <label class="form-label">Phản hồi</label>
+        <textarea asp-for="Item.Feedback" rows="3" class="form-control"></textarea>
+    </div>
+
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+        <a asp-page="/Appointments/Index" class="btn btn-secondary">Hủy</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const modelSelect = document.getElementById('ModelSelect');
+        const versionSelect = document.getElementById('VersionSelect');
+
+        function applyFilterByModel(modelId) {
+            [...versionSelect.options].forEach(opt => {
+                if (!opt.value) return;
+                const belong = opt.getAttribute('data-model');
+                opt.hidden = modelId && belong !== modelId;
+            });
+            if (versionSelect.selectedOptions[0]?.hidden) versionSelect.value = '';
+        }
+
+        modelSelect.addEventListener('change', () => applyFilterByModel(modelSelect.value));
+
+        // Khởi tạo lần đầu: lấy ModelId từ phiên bản đang chọn
+        (function init() {
+            const sel = versionSelect.selectedOptions[0];
+            if (sel) {
+                modelSelect.value = sel.getAttribute('data-model') || "";
+            }
+            applyFilterByModel(modelSelect.value);
+        })();
+    </script>
+}
