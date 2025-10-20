@@ -1,0 +1,58 @@
+﻿@page
+@model EVDManagement.Pages.Appointments.IndexModel
+@{
+    ViewData["Title"] = "Lịch hẹn lái thử";
+}
+
+<h2 class="mb-3">Lịch hẹn lái thử</h2>
+
+<div class="mb-3 d-flex align-items-center gap-2">
+    <input type="date" asp-for="FilterDate" class="form-control w-auto" />
+    <button class="btn btn-primary" type="submit" form="filterForm">Lọc theo ngày</button>
+    <a class="btn btn-secondary" href="/Appointments">Tất cả</a>
+    <a class="btn btn-success" href="/Appointments/Create">+ Tạo lịch</a>
+</div>
+
+<table class="table table-striped table-hover align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>Ngày</th>
+            <th>Giờ</th>
+            <th>Khách hàng</th>
+            <th>Mẫu xe</th>
+            <th>Phiên bản</th>
+            <th>Màu</th>
+            <th>Trạng thái</th>
+            <th>Phản hồi</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.Items != null && Model.Items.Any())
+        {
+            foreach (var a in Model.Items)
+            {
+                <tr>
+                    <td>@a.DateTime.ToString("dd/MM/yyyy")</td>
+                    <td>@a.DateTime.ToString("HH:mm")</td>
+                    <td>@(a.CustomerName ?? $"KH#{a.CustomerId}")</td>
+                    <td>@(a.ModelName ?? "-")</td>
+                    <td>@(a.VersionName ?? $"V#{a.CarVersionId}")</td>
+                    <td>@(a.ColorName ?? $"M#{a.ColorId}")</td>
+                    <td>@a.Status</td>
+                    <td>@(string.IsNullOrWhiteSpace(a.Feedback) ? "-" : a.Feedback)</td>
+                    <td>
+                        <a class="btn btn-sm btn-outline-primary" href="/Appointments/Edit/@a.AppointmentId">Sửa</a>
+                        <a class="btn btn-sm btn-outline-danger" href="/Appointments/Delete/@a.AppointmentId">Xoá</a>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="9" class="text-center text-muted">Không có lịch hẹn nào</td>
+            </tr>
+        }
+    </tbody>
+</table>

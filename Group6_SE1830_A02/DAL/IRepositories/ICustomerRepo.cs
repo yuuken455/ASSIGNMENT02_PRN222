@@ -1,4 +1,4 @@
-﻿using DAL.Entities;
+using DAL.Entities;
 
 namespace DAL.IRepositories
 {
@@ -7,7 +7,7 @@ namespace DAL.IRepositories
         Task<ICollection<Customer>> GetAllCustomersAsync();
         Task AddCustomerAsync(Customer customer);
         Task<Customer?> GetCustomerByIdAsync(int id);
-        Task<Customer?> GetCustomerByEmailAsync(string email);  
+        Task<Customer?> GetCustomerByEmailAsync(string email);
         Task<Customer?> GetCustomerByPhoneAsync(string phone);
         Task UpdateCustomerAsync(Customer customer);
         Task DeleteCustomerAsync(Customer customer);
