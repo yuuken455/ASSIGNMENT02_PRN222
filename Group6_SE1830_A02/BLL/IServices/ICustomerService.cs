@@ -8,6 +8,8 @@ namespace BLL.IServices
         Task<CustomerDTO?> GetCustomerByIdAsync(int id);
         Task UpdateCustomerAsync(UpdateCustomerDTO updateCustomerDto);
         Task DeleteCustomerAsync(int id);
+        Task<ICollection<CustomerDTO>> GetAllCustomersAsync();
+        Task AddCustomerAsync(CreateCustomerDTO createCustomerDto);
 
     }
 }

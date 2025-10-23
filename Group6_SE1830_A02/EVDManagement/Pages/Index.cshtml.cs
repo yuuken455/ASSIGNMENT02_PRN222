@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace EVDManagement.Pages
@@ -12,9 +12,15 @@ namespace EVDManagement.Pages
             _logger = logger;
         }
 
-        public void OnGet()
+        public IActionResult OnGet()
         {
+            if (HttpContext.Session.GetInt32("StaffID") == null)
+            {
+                return RedirectToPage("/Staffs/Login");
+            }
 
+            ViewData["Title"] = "Trang chủ";
+            return Page();
         }
     }
 }

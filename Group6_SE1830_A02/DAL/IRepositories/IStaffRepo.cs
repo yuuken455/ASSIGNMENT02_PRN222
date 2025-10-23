@@ -1,6 +1,9 @@
-﻿namespace DAL.IRepositories
+﻿using DAL.Entities;
+
+namespace DAL.IRepositories
 {
-    public class IStaffRepo
+    public interface IStaffRepo
     {
+        Task<Staff?> GetStaffByEmailAsync(string email);
     }
 }

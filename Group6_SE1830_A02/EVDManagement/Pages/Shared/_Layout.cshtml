@@ -1,7 +1,11 @@
-﻿@{
-    // Lấy đường dẫn Razor Page hiện tại, ví dụ: "/Models/Index"
+﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    var staffName = HttpContextAccessor.HttpContext?.Session.GetString("StaffName") ?? "Admin";
+}
+@{
+    // Lấy đường dẫn Razor Page hiện tại, ví dụ: "/Customers/Index"
     var currentPage = (ViewContext.RouteData.Values["page"]?.ToString() ?? "").ToLower();
-    Func<string, string> activeWhenStartsWith = (prefix) =>
+    Func<string, string> isActive = (prefix) =>
         currentPage.StartsWith(prefix.ToLower()) ? "active" : "";
 }
 
@@ -17,7 +21,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
     <style>
-        /* ===== Base Reset ===== */
         html, body {
             height: 100%;
             margin: 0;
@@ -81,7 +84,7 @@
                 border-left: 3px solid #38bdf8;
             }
 
-        /* ===== Main Content ===== */
+        /* ===== Content ===== */
         .content {
             flex-grow: 1;
             display: flex;
@@ -134,64 +137,45 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <h2><i class="fa-solid fa-bolt me-2"></i>EV Dealer</h2>
-<ul>
-    <!-- Trang chủ -->
-    <li class="sidebar-link @(activeWhenStartsWith("/Index"))" asp-page="/Index">
-        🏠 Trang chủ
-    </li>
-
-    <!-- Quản lý Model (entity Model) -->
-    <li class="sidebar-link @(CurrentPage.StartsWith("/catalog") ? "active" : "")"
-        asp-page="/Catalog/Index">
-        🚗 Catalog
-    </li>
-
-    <!-- Đơn hàng -->
-    <li class="sidebar-link" asp-page="/Orders/Index">📦 Đơn hàng</li>
-
-    <!-- Lịch hẹn -->
-    <li class="sidebar-link" asp-page="/Appointments/Index">📅 Lịch hẹn</li>
-
-    <!-- Khách hàng -->
-    <li class="sidebar-link" asp-page="/Customers/Index">👤 Khách hàng</li>
-</ul>
-
+        <ul class="sidebar-menu">
+            <li><a class="sidebar-link @(isActive("/index"))" asp-page="/Index">🏠 Trang chủ</a></li>
+            <li><a class="sidebar-link @(isActive("/catalog"))" asp-page="/Catalog/Index">🚗 Catalog</a></li>
+            <li><a class="sidebar-link @(isActive("/orders"))" asp-page="/Orders/Index">📦 Đơn hàng</a></li>
+            <li><a class="sidebar-link @(isActive("/appointments"))" asp-page="/Appointments/Index">📅 Lịch hẹn</a></li>
+            <li><a class="sidebar-link @(isActive("/customers"))" asp-page="/Customers/Index">👤 Khách hàng</a></li>
+        </ul>
     </div>
 
-    <!-- Content -->
+    <!-- Main Content -->
     <div class="content">
         <div class="header">
             <h4>@(ViewData["Title"] ?? "Dashboard")</h4>
             <div class="user">
-                Xin chào, <strong>Admin</strong> |
-                <a asp-page="/Logout">Đăng xuất</a>
+                Xin chào, <strong>@staffName</strong> |
+                <a asp-page="/Staffs/Logout">Đăng xuất</a>
             </div>
         </div>
 
         <div class="main">
-            <div id="notification-container">
-    @if (TempData["Msg"] is string msg)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @msg
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <!-- Hiển thị thông báo nếu có -->
+            @if (TempData["Msg"] is string msg)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @msg
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @RenderBody()
         </div>
-    }
-</div>
 
-@RenderBody()
+        <footer>
+            &copy; @DateTime.Now.Year - Quản lý bán xe điện qua đại lý
+        </footer>
+    </div>
 
-<footer>
-    &copy; @DateTime.Now.Year - Quản lý bán xe điện qua đại lý
-</footer>
-
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-@* Nếu bạn dùng SignalR chung cho nhiều trang *@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
-
-@RenderSection("Scripts", required: false)
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
 </body>
 </html>
-
