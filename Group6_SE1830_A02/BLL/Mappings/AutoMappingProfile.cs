@@ -1,11 +1,13 @@
-using AutoMapper;
+﻿using AutoMapper;
 using BLL.DTOs;
 using BLL.DTOs.CustomerDTOs;
+using DAL.Entities;
+
+// Tạo bí danh để code gọn gàng hơn
 using DALCustomer = DAL.Entities.Customer;
 using DALModel = DAL.Entities.Model;
 using DALInventory = DAL.Entities.Inventory;
 using DALTestDrive = DAL.Entities.TestDriveAppointment;
-using DAL.Entities;
 
 namespace BLL.Mappings
 {
@@ -13,35 +15,40 @@ namespace BLL.Mappings
     {
         public AutoMappingProfile()
         {
-            // Customer mappings
+            // 🟩 Staff mapping
+            CreateMap<Staff, StaffDto>().ReverseMap();
+
+            // 🟩 Customer mappings
             CreateMap<DALCustomer, CustomerDTO>().ReverseMap();
             CreateMap<CreateCustomerDTO, DALCustomer>();
             CreateMap<UpdateCustomerDTO, DALCustomer>();
             CreateMap<CustomerDTO, UpdateCustomerDTO>().ReverseMap();
 
-            // Model mappings
+            // 🟩 Model mappings
             CreateMap<DALModel, ModelDto>().ReverseMap();
 
-            // Version & Color mappings
+            // 🟩 Version mappings
             CreateMap<DALVersion, VersionDto>().ReverseMap();
+
+            // 🟩 Color mappings
             CreateMap<DALColor, ColorDto>().ReverseMap();
 
-            // TestDriveAppointment mappings
+            // 🟩 TestDriveAppointment mappings
             CreateMap<DALTestDrive, TestDriveAppointmentDTO>()
-                .ForMember(d => d.ModelId, o => o.MapFrom(s => s.CarVersion.ModelId))
-                .ForMember(d => d.ModelName, o => o.MapFrom(s => s.CarVersion.Model.ModelName))
-                .ForMember(d => d.CarVersionId, o => o.MapFrom(s => s.CarVersionId))
-                .ForMember(d => d.VersionName, o => o.MapFrom(s => s.CarVersion.VersionName))
-                .ForMember(d => d.ColorId, o => o.MapFrom(s => s.ColorId))
-                .ForMember(d => d.ColorName, o => o.MapFrom(s => s.Color.ColorName))
-                .ForMember(d => d.CustomerName, o => o.MapFrom(s => s.Customer.FullName));
+                .ForMember(dest => dest.ModelId, opt => opt.MapFrom(src => src.CarVersion.ModelId))
+                .ForMember(dest => dest.ModelName, opt => opt.MapFrom(src => src.CarVersion.Model.ModelName))
+                .ForMember(dest => dest.CarVersionId, opt => opt.MapFrom(src => src.CarVersionId))
+                .ForMember(dest => dest.VersionName, opt => opt.MapFrom(src => src.CarVersion.VersionName))
+                .ForMember(dest => dest.ColorId, opt => opt.MapFrom(src => src.ColorId))
+                .ForMember(dest => dest.ColorName, opt => opt.MapFrom(src => src.Color.ColorName))
+                .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.Customer.FullName));
 
             CreateMap<TestDriveAppointmentDTO, DALTestDrive>()
-                .ForMember(d => d.ModelId, o => o.Ignore())
-                .ForMember(d => d.CarVersion, o => o.Ignore())
-                .ForMember(d => d.Color, o => o.Ignore());
+                .ForMember(dest => dest.CarVersion, opt => opt.Ignore())
+                .ForMember(dest => dest.Color, opt => opt.Ignore())
+                .ForMember(dest => dest.Customer, opt => opt.Ignore());
 
-            // Inventory mappings
+            // 🟩 Inventory mappings
             CreateMap<DALInventory, InventoryDto>().ReverseMap();
         }
     }
