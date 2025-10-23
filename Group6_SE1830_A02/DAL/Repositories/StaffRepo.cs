@@ -1,4 +1,6 @@
-﻿using DAL.IRepositories;
+﻿using DAL.Entities;
+using DAL.IRepositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Repositories
 {
@@ -9,6 +11,11 @@ namespace DAL.Repositories
         public StaffRepo(DBContext context)
         {
             _context = context;
+        }
+
+        public async Task<Staff?> GetStaffByEmailAsync(string email)
+        {
+            return await _context.Staffs.FirstOrDefaultAsync(s => s.Email == email);    
         }
     }
 }

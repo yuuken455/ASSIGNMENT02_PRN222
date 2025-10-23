@@ -6,7 +6,6 @@ using DAL.IRepositories;
 using DAL.Repositories;
 using EVDManagement.SignalR;
 using Microsoft.EntityFrameworkCore;
-using EVDManagement.SignalR;
 using DAL.IRepository;
 using DAL.Repository; // <— thêm
 
@@ -15,6 +14,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddSignalR();
+
+builder.Services.AddSession();
 
 // Register DbContext
 builder.Services.AddDbContext<DBContext>(options =>
@@ -48,6 +49,8 @@ builder.Services.AddScoped<ITestDriveAppointmentService, TestDriveAppointmentSer
 // >>> SignalR
 builder.Services.AddSignalR(); // <— thêm dòng này
 
+builder.Services.AddHttpContextAccessor();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -59,6 +62,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.UseSession();
 
 app.UseRouting();
 
