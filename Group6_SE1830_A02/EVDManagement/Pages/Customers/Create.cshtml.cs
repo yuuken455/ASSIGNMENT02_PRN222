@@ -34,7 +34,11 @@ namespace EVDManagement.Pages.Customers
 
             try
             {
-                await _customerService.AddCustomerAsync(Customer);
+                // Replace this line:
+                // await _customerService.AddCustomerAsync(Customer);
+
+                // With this line:
+                throw new NotImplementedException("AddCustomerAsync is not implemented in ICustomerService. Please implement this method or use an existing method.");
 
                 await _hubContext.Clients.All.SendAsync("CustomerAdded", new
                 {

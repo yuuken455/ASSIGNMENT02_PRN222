@@ -5,8 +5,8 @@ namespace BLL.IServices
 {
     public interface IRealtimeNotifier
     {
-        Task AppointmentCreated(TestDriveAppointmentDto dto);
-        Task AppointmentUpdated(TestDriveAppointmentDto dto);
+        Task AppointmentCreated(TestDriveAppointmentDTO dto);
+        Task AppointmentUpdated(TestDriveAppointmentDTO dto);
         Task AppointmentDeleted(int appointmentId);
     }
 }

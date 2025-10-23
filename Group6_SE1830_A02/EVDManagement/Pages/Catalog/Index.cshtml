@@ -1,214 +1,134 @@
-﻿@page "{activeTab?}"
+﻿@page
 @model EVDManagement.Pages.Catalog.IndexModel
 @{
-    ViewData["Title"] = "Catalog";
-    var active = (ViewData["ActiveTab"] as string) ?? "cars";
+    ViewData["Title"] = "Cars Catalog";
 }
 
-<h2 class="mb-3">Catalog Management</h2>
+<partial name="_TabCars" model="Model" />
 
-@if (TempData["Msg"] is string msg)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @msg
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
+<!-- EDIT MODAL -->
+<div class="modal fade" id="carEditModal" tabindex="-1" aria-labelledby="carEditModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="UpdateCarFull">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="carEditModalLabel">Edit Car Variant</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
 
-<ul class="nav nav-tabs" id="catalogTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link @(active == "cars" ? "active" : "")" data-bs-toggle="tab" data-bs-target="#tab-cars" type="button" role="tab">Cars</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link @(active == "models" ? "active" : "")" data-bs-toggle="tab" data-bs-target="#tab-models" type="button" role="tab">Models</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link @(active == "versions" ? "active" : "")" data-bs-toggle="tab" data-bs-target="#tab-versions" type="button" role="tab">Versions</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link @(active == "colors" ? "active" : "")" data-bs-toggle="tab" data-bs-target="#tab-colors" type="button" role="tab">Colors</button>
-    </li>
-</ul>
+                <div class="modal-body">
+                    <input type="hidden" id="eModelId" name="EditCar.ModelId" />
+                    <input type="hidden" id="eVersionId" name="EditCar.VersionId" />
+                    <input type="hidden" id="eColorId" name="EditCar.ColorId" />
 
-<div class="tab-content mt-3">
-    <div class="tab-pane fade @(active == "cars" ? "show active" : "")" id="tab-cars" role="tabpanel">
-        <partial name="_TabCars" />
-    </div>
-    <div class="tab-pane fade @(active == "models" ? "show active" : "")" id="tab-models" role="tabpanel">  
-        <partial name="_TabModels" />
-    </div>
-    <div class="tab-pane fade @(active == "versions" ? "show active" : "")" id="tab-versions" role="tabpanel">
-        <partial name="_TabVersions" />
-    </div>
-    <div class="tab-pane fade @(active == "colors" ? "show active" : "")" id="tab-colors" role="tabpanel">
-        <partial name="_TabColors" />
+                    <div class="row g-3">
+                        <div class="col-12"><h6 class="text-muted mb-0">Model</h6><hr class="my-2"></div>
+                        <div class="col-md-6">
+                            <label class="form-label">Model name</label>
+                            <input id="eModelName" name="EditCar.ModelName" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Segment</label>
+                            <input id="eModelSeg" name="EditCar.Segment" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Description</label>
+                            <input id="eModelDesc" name="EditCar.Description" class="form-control" />
+                        </div>
+
+                        <div class="col-12 mt-1"><h6 class="text-muted mb-0">Version</h6><hr class="my-2"></div>
+                        <div class="col-md-6">
+                            <label class="form-label">Version name</label>
+                            <input id="eVersionName" name="EditCar.VersionName" class="form-control" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Battery (kWh)</label>
+                            <input id="eBatt" name="EditCar.BatteryCapacity" class="form-control" type="number" step="0.1" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Range (km)</label>
+                            <input id="eRange" name="EditCar.RangeKm" class="form-control" type="number" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Seat</label>
+                            <input id="eSeat" name="EditCar.Seat" class="form-control" type="number" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Base price</label>
+                            <input id="eBase" name="EditCar.BasePrice" class="form-control" type="number" step="1000" />
+                        </div>
+
+                        <div class="col-12 mt-1"><h6 class="text-muted mb-0">Color</h6><hr class="my-2"></div>
+                        <div class="col-md-6">
+                            <label class="form-label">Color name</label>
+                            <input id="eColorName" name="EditCar.ColorName" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Extra cost</label>
+                            <input id="eExtra" name="EditCar.ExtraCost" class="form-control" type="number" step="1000" />
+                        </div>
+
+                        <div class="col-12 mt-1"><h6 class="text-muted mb-0">Inventory</h6><hr class="my-2"></div>
+                        <div class="col-md-3">
+                            <label class="form-label">Quantity</label>
+                            <input id="eQty" name="EditCar.Quantity" class="form-control" type="number" min="0" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
     <script>
-        // giữ đúng tab sau reload
-        (function(){
-            const active = '@active';
-            if (active) {
-                const el = document.querySelector(`[data-bs-target="#tab-${active}"]`);
-                if (el) new bootstrap.Tab(el).show();
-            }
-        })();
-
-        // SignalR reload khi thay đổi catalog
-        const conn = new signalR.HubConnectionBuilder().withUrl("/hubs/catalog").build();
-        conn.on("CatalogChanged", () => location.reload());
-        conn.start();
-
-        // ======== JS cho tab Cars (DI CHUYỂN TỪ PARTIAL SANG ĐÂY) ========
-
-        function fillExtra(){
-            const sel = document.getElementById("colorSelect");
-            const opt = sel?.options[sel.selectedIndex];
-            const extra = opt ? parseFloat(opt.dataset.extra || 0) : 0;
-            const extraEl = document.getElementById("extra");
-            if (extraEl) extraEl.value = extra;
-            calcFinal();
-        }
-
-        function fillBaseFromVersion(){
-            const sel = document.getElementById("versionSelect");
-            const opt = sel?.options[sel.selectedIndex];
-            const base = opt ? parseFloat(opt.dataset.base || 0) : 0;
-            const baseEl = document.getElementById("base");
-            if (baseEl) baseEl.value = base;
-            calcFinal();
-        }
-
         function calcFinal(){
-            const base = parseFloat(document.getElementById("base")?.value || 0);
-            const extra = parseFloat(document.getElementById("extra")?.value || 0);
-            const finalEl = document.getElementById("final");
-            if (finalEl) finalEl.value = (base + extra).toFixed(0);
-        }
-
-        // Details modal binding (Bootstrap 5)
-        document.addEventListener('DOMContentLoaded', () => {
-            const modalEl = document.getElementById('carDetailsModal');
-            if (!modalEl) return;
-
-            modalEl.addEventListener('show.bs.modal', (evt) => {
-                let btn = evt.relatedTarget;
-                if (!btn) return;
-                btn = btn.closest('button');
-
-                const ds = btn.dataset;
-
-                const setText = (id, val) => {
-                    const el = document.getElementById(id);
-                    if (el) el.textContent = (val ?? '').toString();
-                };
-
-                setText('dModelName',   ds.modelName);
-                setText('dVersionName', ds.versionName);
-
-                setText('dModelName2',  ds.modelName);
-                setText('dModelSeg',    ds.modelSeg || '-');
-                setText('dModelDesc',   ds.modelDesc || '(no description)');
-
-                setText('dVersionName2', ds.versionName);
-                setText('dBatt',         ds.batt || '0');
-                setText('dRange',        ds.range || '0');
-                setText('dSeat',         ds.seat || '0');
-                setText('dBase',         Number(ds.base || 0).toLocaleString());
-
-                setText('dColorName', ds.colorName || '-');
-                setText('dHex',       ds.hex || '-');
-                setText('dExtra',     Number(ds.extra || 0).toLocaleString());
-                setText('dFinal',     Number(ds.final || 0).toLocaleString());
-
-                const sw = document.getElementById('dSwatch');
-                if (sw) sw.style.background = ds.hex || 'transparent';
-            });
-
-            // Edit modal binding
-            const editEl = document.getElementById('carEditModal');
-            if (editEl) {
-                editEl.addEventListener('show.bs.modal', (evt) => {
-                    let btn = evt.relatedTarget;
-                    if (!btn) return;
-                    btn = btn.closest('button');
-
-                    const get = k => btn.getAttribute(k) || '';
-
-                    document.getElementById('eModelId').value   = get('data-model-id');
-                    document.getElementById('eVersionId').value = get('data-version-id');
-                    document.getElementById('eColorId').value   = get('data-color-id');
-
-                    document.getElementById('eModelName').value = get('data-model-name');
-                    document.getElementById('eModelSeg').value  = get('data-model-seg');
-                    document.getElementById('eModelDesc').value = get('data-model-desc');
-
-                    document.getElementById('eVersionName').value = get('data-version-name');
-                    document.getElementById('eBatt').value        = get('data-batt');
-                    document.getElementById('eRange').value       = get('data-range');
-                    document.getElementById('eSeat').value        = get('data-seat');
-                    document.getElementById('eBase').value        = get('data-base');
-
-                    document.getElementById('eColorName').value = get('data-color-name');
-                    document.getElementById('eHex').value       = get('data-hex');
-                    document.getElementById('eExtra').value     = get('data-extra');
-                });
-            }
-        });
-              function filterVersions(){
-          const modelId = document.getElementById('modelSelect')?.value;
-          const vSel = document.getElementById('versionSelect');
-          if (!vSel) return;
-          [...vSel.options].forEach(opt => {
-            if (!opt.value) return; // placeholder
-            const belongs = (opt.dataset.model || '') === (modelId || '');
-            opt.hidden = !!modelId && !belongs;   // khi chọn model -> ẩn version không cùng model
-          });
-          vSel.value = '';
-          document.getElementById('base')?.value = '';
-          calcFinal();
-        }
-
-        function fillBaseFromVersion(){
-          const vSel = document.getElementById('versionSelect');
-          const o = vSel?.options[vSel.selectedIndex];
-          const base = o ? parseFloat(o.dataset.base || 0) : 0;
-          const batt = o?.dataset.batt || '';
-          const range = o?.dataset.range || '';
-          const seat  = o?.dataset.seat  || '';
-          const baseEl = document.getElementById('base');
-          if (baseEl) baseEl.value = base;
-          // Gợi ý: nếu người dùng chưa gõ new values thì gợi lại thông số
-          if (!document.getElementById('CarInput_NewBatteryCapacity').value) document.getElementById('CarInput_NewBatteryCapacity').value = batt;
-          if (!document.getElementById('CarInput_NewRangeKm').value) document.getElementById('CarInput_NewRangeKm').value = range;
-          if (!document.getElementById('CarInput_NewSeat').value) document.getElementById('CarInput_NewSeat').value = seat;
-          calcFinal();
-        }
-
-        function fillExtra(){
-          const cSel = document.getElementById('colorSelect');
-          const o = cSel?.options[cSel.selectedIndex];
-          const extra = o ? parseFloat(o.dataset.extra || 0) : 0;
-          const hex   = o?.dataset.hex || '';
-          const extraEl = document.getElementById('extra');
-          if (extraEl) extraEl.value = extra;
-          // gợi ý hex nếu chưa nhập
-          const hexEl = document.getElementById('CarInput_NewHexCode');
-          if (hex && hexEl && !hexEl.value) hexEl.value = hex;
-          calcFinal();
-        }
-
-        function calcFinal(){
-          const base = parseFloat(document.getElementById('base')?.value || 0);
+          const base  = parseFloat(document.getElementById('base')?.value || 0);
           const extra = parseFloat(document.getElementById('extra')?.value || 0);
           const finalEl = document.getElementById('final');
           if (finalEl) finalEl.value = (base + extra).toFixed(0);
         }
-        // ======== /JS Cars ========
-    </script>
-}
+        document.addEventListener('DOMContentLoaded', () => {
+          ['base','extra'].forEach(id=>{
+            const el=document.getElementById(id);
+            if(el) el.addEventListener('input', calcFinal);
+          });
+          calcFinal();
 
+          const editModal = document.getElementById('carEditModal');
+          if (editModal){
+            editModal.addEventListener('show.bs.modal', (evt)=>{
+              const b = evt.relatedTarget; if(!b) return;
+              const ds = b.dataset;
+              const setV = (id, v)=>{ const el=document.getElementById(id); if(el) el.value = (v ?? ''); };
+
+              setV('eModelId',   ds.modelId);
+              setV('eVersionId', ds.versionId);
+              setV('eColorId',   ds.colorId);
+
+              setV('eModelName', ds.modelName);
+              setV('eModelSeg',  ds.modelSeg);
+              setV('eModelDesc', ds.modelDesc);
+
+              setV('eVersionName', ds.versionName);
+              setV('eBatt',   ds.batt);
+              setV('eRange',  ds.range);
+              setV('eSeat',   ds.seat);
+              setV('eBase',   ds.base);
+
+              setV('eColorName', ds.colorName);
+              setV('eExtra',     ds.extra);
+
+              setV('eQty', ds.qty);
+            });
+          }
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+}

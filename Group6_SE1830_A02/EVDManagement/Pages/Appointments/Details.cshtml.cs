@@ -10,7 +10,7 @@ namespace EVDManagement.Pages.Appointments
         private readonly ITestDriveAppointmentService _svc;
         public DetailsModel(ITestDriveAppointmentService svc) => _svc = svc;
 
-        public TestDriveAppointmentDto? Item { get; set; }
+        public TestDriveAppointmentDTO? Item { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int id)
         {

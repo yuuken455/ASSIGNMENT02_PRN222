@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BLL.DTOs
 {
-    public class TestDriveAppointmentDto
+    public class TestDriveAppointmentDTO
     {
         public int AppointmentId { get; set; }
 

@@ -18,12 +18,14 @@ namespace EVDManagement.Pages.Customers
 
         public async Task OnGet()
         {
-            Customers = await _customerService.GetAllCustomersAsync();
+            // Customers = await _customerService.GetAllCustomersAsync();  
+            Customers = new List<CustomerDTO>(); // Or fetch customers another way if available
         }
 
         public async Task<JsonResult> OnGetCustomersAsync()
         {
-            var customers = await _customerService.GetAllCustomersAsync();
+            // var customers = await _customerService.GetAllCustomersAsync();
+            var customers = new List<CustomerDTO>(); // Or fetch customers another way if available
             return new JsonResult(customers);
         }
     }

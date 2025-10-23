@@ -5,13 +5,13 @@ namespace BLL.IServices
     public interface ITestDriveAppointmentService
     {
         // READ
-        Task<List<TestDriveAppointmentDto>> GetAllAsync();
-        Task<List<TestDriveAppointmentDto>> GetByDayAsync(DateTime date);
-        Task<TestDriveAppointmentDto?> GetByIdAsync(int id);
+        Task<List<TestDriveAppointmentDTO>> GetAllAsync();
+        Task<List<TestDriveAppointmentDTO>> GetByDayAsync(DateTime date);
+        Task<TestDriveAppointmentDTO?> GetByIdAsync(int id);
 
         // WRITE
-        Task<TestDriveAppointmentDto> CreateAsync(TestDriveAppointmentDto dto);
-        Task UpdateAsync(TestDriveAppointmentDto dto);
+        Task<TestDriveAppointmentDTO> CreateAsync(TestDriveAppointmentDTO dto);
+        Task UpdateAsync(TestDriveAppointmentDTO dto);
         Task DeleteAsync(int id);
 
         // UTIL: kiểm tra slot rảnh (áp dụng rule duration + buffer trong service/repo)

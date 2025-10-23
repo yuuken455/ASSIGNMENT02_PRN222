@@ -134,26 +134,41 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <h2><i class="fa-solid fa-bolt me-2"></i>EV Dealer</h2>
-<ul>
+<ul class="sidebar-menu">
     <!-- Trang chủ -->
-    <li class="sidebar-link @(activeWhenStartsWith("/Index"))" asp-page="/Index">
-        🏠 Trang chủ
+    <li>
+        <a class="sidebar-link @(activeWhenStartsWith("/Index"))" asp-page="/Index">
+            🏠 Trang chủ
+        </a>
     </li>
 
     <!-- Quản lý Model (entity Model) -->
-    <li class="sidebar-link @(CurrentPage.StartsWith("/catalog") ? "active" : "")"
-        asp-page="/Catalog/Index">
-        🚗 Catalog
+    <li>
+        <a class="sidebar-link @(activeWhenStartsWith("/Catalog"))" asp-page="/Catalog/Index">
+            🚗 Catalog
+        </a>
     </li>
 
     <!-- Đơn hàng -->
-    <li class="sidebar-link" asp-page="/Orders/Index">📦 Đơn hàng</li>
+    <li>
+        <a class="sidebar-link @(activeWhenStartsWith("/Orders"))" asp-page="/Orders/Index">
+            📦 Đơn hàng
+        </a>
+    </li>
 
     <!-- Lịch hẹn -->
-    <li class="sidebar-link" asp-page="/Appointments/Index">📅 Lịch hẹn</li>
+    <li>
+        <a class="sidebar-link @(activeWhenStartsWith("/Appointments"))" asp-page="/Appointments/Index">
+            📅 Lịch hẹn
+        </a>
+    </li>
 
     <!-- Khách hàng -->
-    <li class="sidebar-link" asp-page="/Customers/Index">👤 Khách hàng</li>
+    <li>
+        <a class="sidebar-link @(activeWhenStartsWith("/Customers"))" asp-page="/Customers/Index">
+            👤 Khách hàng
+        </a>
+    </li>
 </ul>
 
     </div>

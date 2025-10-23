@@ -9,7 +9,7 @@ namespace EVDManagement.Pages.Appointments
         private readonly ITestDriveAppointmentService _svc;
         public IndexModel(ITestDriveAppointmentService svc) => _svc = svc;
 
-        public List<TestDriveAppointmentDto> Items { get; set; } = new();
+        public List<TestDriveAppointmentDTO> Items { get; set; } = new();
 
         public DateTime? FilterDate { get; set; }
 

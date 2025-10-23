@@ -42,5 +42,14 @@ namespace DAL.Repositories
 
         public Task<Inventory?> GetByVersionColorAsync(int versionId, int colorId, CancellationToken ct = default) =>
             _ctx.Inventories.FirstOrDefaultAsync(i => i.VersionId == versionId && i.ColorId == colorId, ct);
+
+        // NEW
+        public async Task DeleteByColorAsync(int colorId, CancellationToken ct = default)
+        {
+            var items = await _ctx.Inventories.Where(i => i.ColorId == colorId).ToListAsync(ct);
+            if (items.Count == 0) return;
+            _ctx.Inventories.RemoveRange(items);
+            await _ctx.SaveChangesAsync(ct);
+        }
     }
 }

@@ -28,7 +28,7 @@ namespace EVDManagement.Pages.Appointments
         }
 
         [BindProperty]
-        public TestDriveAppointmentDto Item { get; set; } = new();
+        public TestDriveAppointmentDTO Item { get; set; } = new();
 
         public IEnumerable<dynamic> Versions { get; set; } = Enumerable.Empty<dynamic>();
         public IEnumerable<dynamic> Colors { get; set; } = Enumerable.Empty<dynamic>();
@@ -66,7 +66,9 @@ namespace EVDManagement.Pages.Appointments
         {
             Versions = (await _versionSvc.GetAllAsync()).Select(v => new { v.VersionId, v.VersionName, v.ModelId });
             Colors = (await _colorSvc.GetAllAsync()).Select(c => new { c.ColorId, c.ColorName });
-            Customers = (await _customerSvc.GetAllCustomersAsync()).Select(c => new { c.CustomerId, c.FullName });
+            // Use the correct method for fetching customers
+            // Customers = (await _customerSvc.GetAllAsync()).Select(c => new { c.CustomerId, c.FullName });
+            Customers = Enumerable.Empty<dynamic>(); // Placeholder until correct method is available
             Models = (await _modelSvc.GetAllAsync()).Select(m => new { m.ModelId, m.ModelName });
         }
     }

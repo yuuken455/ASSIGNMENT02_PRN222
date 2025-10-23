@@ -1,100 +1,97 @@
 ﻿@model EVDManagement.Pages.Catalog.IndexModel
-
+@{
+    const long MAX_VND = 9_999_000_000_000;
+}
 <div class="row g-3">
     <!-- FORM -->
     <div class="col-lg-5">
         <div class="card">
-            <div class="card-header bg-primary text-white">Create Car (Model + Version + Color)</div>
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span>Create Car</span>
+                <button type="button" class="btn btn-sm btn-light"
+                        onclick="document.querySelector('form[data-create]').scrollIntoView({behavior:'smooth'});">
+                    Focus
+                </button>
+            </div>
             <div class="card-body">
-                <!-- hiện lỗi tổng -->
-                <div asp-validation-summary="All" class="text-danger"></div>
+                <div asp-validation-summary="All" class="text-danger mb-2"></div>
 
-                <form method="post" asp-page-handler="SaveCar">
-                    <!-- MODEL -->
+                <form method="post" asp-page-handler="SaveCar" data-create>
                     <label class="form-label">Model</label>
-                    <select class="form-select mb-2" asp-for="CarInput.ExistingModelId" id="modelSelect" onchange="filterVersions()">
-                        <option value="">-- Select model --</option>
-                        @foreach (var m in Model.Models)
-                        {
-                            <option value="@m.ModelId">@m.ModelName (@m.Segment)</option>
-                        }
-                    </select>
-                    <input class="form-control mb-2" asp-for="CarInput.NewModelName" placeholder="Or enter new model name" />
-                    <div class="row g-2">
+                    <input class="form-control mb-2" asp-for="CarInput.ModelName" placeholder="Model name" />
+                    <span class="text-danger" asp-validation-for="CarInput.ModelName"></span>
+
+                    <div class="row g-2 mb-2">
                         <div class="col-6">
-                            <input class="form-control" asp-for="CarInput.NewModelSegment" placeholder="Model segment (optional)" />
+                            <input class="form-control" asp-for="CarInput.ModelSegment" placeholder="Model segment (optional)" />
                         </div>
                         <div class="col-6">
-                            <input class="form-control" asp-for="CarInput.NewModelDescription" placeholder="Model description (optional)" />
+                            <input class="form-control" asp-for="CarInput.ModelDescription" placeholder="Model description (optional)" />
                         </div>
                     </div>
 
-                    <!-- VERSION -->
-                    <label class="form-label mt-2">Version</label>
-                    <select class="form-select mb-2" asp-for="CarInput.ExistingVersionId" id="versionSelect" onchange="fillBaseFromVersion()">
-                        <option value="">-- Select version --</option>
-                        @foreach (var v in Model.Versions)
-                        {
-                            <option value="@v.VersionId"
-                                    data-model="@v.ModelId"
-                                    data-base="@v.BasePrice"
-                                    data-batt="@v.BatteryCapacity"
-                                    data-range="@v.RangeKm"
-                                    data-seat="@v.Seat">
-                                @v.VersionName
-                            </option>
-                        }
-                    </select>
-                    <input class="form-control mb-2" asp-for="CarInput.NewVersionName" placeholder="Or enter new version name" />
+                    <label class="form-label">Version</label>
+                    <input class="form-control mb-2" asp-for="CarInput.VersionName" placeholder="Version name" />
+                    <span class="text-danger" asp-validation-for="CarInput.VersionName"></span>
+
                     <div class="row g-2">
-                        <div class="col-6"><input class="form-control" asp-for="CarInput.NewBatteryCapacity" placeholder="Battery (kWh)" type="number" step="0.1" /></div>
-                        <div class="col-6"><input class="form-control" asp-for="CarInput.NewRangeKm" placeholder="Range (km)" type="number" /></div>
+                        <div class="col-6">
+                            <input class="form-control" asp-for="CarInput.BatteryCapacity" placeholder="Battery (kWh)" type="number" step="0.1" />
+                            <span class="text-danger" asp-validation-for="CarInput.BatteryCapacity"></span>
+                        </div>
+                        <div class="col-6">
+                            <input class="form-control" asp-for="CarInput.RangeKm" placeholder="Range (km)" type="number" />
+                            <span class="text-danger" asp-validation-for="CarInput.RangeKm"></span>
+                        </div>
                     </div>
                     <div class="row g-2 mt-1">
-                        <div class="col-6"><input class="form-control" asp-for="CarInput.NewSeat" placeholder="Seat" type="number" /></div>
                         <div class="col-6">
-                            <input class="form-control" asp-for="CarInput.NewBasePrice" placeholder="Base price" type="number" step="1000" id="base" oninput="calcFinal()" />
-                            <span class="text-muted small">Nếu chọn Version có sẵn, giá sẽ tự điền — bạn vẫn có thể sửa.</span>
+                            <input class="form-control" asp-for="CarInput.Seat" placeholder="Seat" type="number" />
+                            <span class="text-danger" asp-validation-for="CarInput.Seat"></span>
+                        </div>
+                        <div class="col-6">
+                            <input class="form-control" asp-for="CarInput.BasePrice" placeholder="Base price" type="number" step="1000" min="0" max="@MAX_VND" id="base" />
+                            <span class="text-danger" asp-validation-for="CarInput.BasePrice"></span>
                         </div>
                     </div>
 
-                    <!-- COLOR -->
                     <label class="form-label mt-2">Color</label>
-                    <select class="form-select mb-2" asp-for="CarInput.ExistingColorId" id="colorSelect" onchange="fillExtra()">
-                        <option value="">-- Select color --</option>
-                        @foreach (var c in Model.Colors)
-                        {
-                            <option value="@c.ColorId"
-                                    data-extra="@c.ExtraCost"
-                                    data-hex="@c.HexCode"
-                                    data-ver="@c.VersionId">
-                                @c.ColorName (@c.HexCode)
-                            </option>
-                        }
-                    </select>
-                    <div class="row g-2">
-                        <div class="col-6"><input class="form-control" asp-for="CarInput.NewColorName" placeholder="Or enter new color name" /></div>
-                        <div class="col-6"><input class="form-control" asp-for="CarInput.NewHexCode" placeholder="#RRGGBB" /></div>
-                    </div>
+                    <input class="form-control mb-2" asp-for="CarInput.ColorName" placeholder="Color name" />
+                    <span class="text-danger" asp-validation-for="CarInput.ColorName"></span>
+
                     <div class="row g-2 mt-1">
                         <div class="col-6">
-                            <input class="form-control" asp-for="CarInput.NewExtraCost" placeholder="Extra cost" type="number" id="extra" step="1000" oninput="calcFinal()" />
+                            <input class="form-control" asp-for="CarInput.ExtraCost" placeholder="Extra cost" type="number" step="1000" min="0" max="@MAX_VND" id="extra" />
+                            <span class="text-danger" asp-validation-for="CarInput.ExtraCost"></span>
                         </div>
                         <div class="col-6">
-                            <label class="form-label">Final Price</label>
+                            <label class="form-label">Final Price (Base + Extra)</label>
                             <input class="form-control" id="final" type="number" readonly />
                         </div>
                     </div>
 
-                    <button class="btn btn-primary mt-3" type="submit">Save</button>
+                    <div class="row g-2 mt-1">
+                        <div class="col-6">
+                            <input class="form-control" asp-for="CarInput.Quantity" placeholder="Quantity" type="number" min="0" />
+                            <span class="text-danger" asp-validation-for="CarInput.Quantity"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn btn-primary" type="submit" onclick="calcFinal()">Save</button>
+                        <button type="reset" class="btn btn-secondary" onclick="setTimeout(()=>{calcFinal();},0)">Reset</button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
+
     <!-- LIST -->
     <div class="col-lg-7">
         <div class="card">
-            <div class="card-header bg-dark text-white">All Cars</div>
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <span>All Cars</span>
+            </div>
             <div class="card-body table-responsive">
                 <table class="table table-striped align-middle">
                     <thead>
@@ -105,6 +102,7 @@
                             <th>Color</th>
                             <th>Extra</th>
                             <th>Final</th>
+                            <th>Quantity</th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
@@ -118,6 +116,9 @@
                             var extra = c.ExtraCost ?? 0;
                             var final = basePrice + extra;
 
+                            int qty = 0;
+                            Model.InventoryMap.TryGetValue((v?.VersionId ?? 0, c.ColorId), out qty);
+
                             <tr>
                                 <td>
                                     <div class="fw-semibold">@m?.ModelName</div>
@@ -128,62 +129,36 @@
                                     <div class="text-muted small">@v?.BatteryCapacity kWh · @v?.RangeKm km · @v?.Seat seat</div>
                                 </td>
                                 <td>@basePrice.ToString("N0")</td>
-                                <td>
-                                    @c.ColorName
-                                    @if (!string.IsNullOrWhiteSpace(c.HexCode))
-                                    {
-                                        <span class="ms-2 d-inline-block rounded-circle" style="width:14px;height:14px;background:@c.HexCode;border:1px solid #ddd;"></span>
-                                    }
-                                </td>
+                                <td>@c.ColorName</td>
                                 <td>@extra.ToString("N0")</td>
                                 <td class="fw-semibold">@final.ToString("N0")</td>
+                                <td>@qty</td>
                                 <td class="text-end">
-                                    <!-- Details -->
-                                <button type="button"
-        class="btn btn-sm btn-info me-1"
-        data-bs-toggle="modal"
-        data-bs-target="#carDetailsModal"
-        data-model-name="@m?.ModelName"
-        data-model-seg="@m?.Segment"
-        data-model-desc="@m?.Description"
-        data-version-name="@v?.VersionName"
-        data-batt="@(v?.BatteryCapacity?.ToString() ?? "")"
-        data-range="@(v?.RangeKm?.ToString() ?? "")"
-        data-seat="@(v?.Seat?.ToString() ?? "")"
-        data-base="@((v?.BasePrice ?? 0))"      
-        data-color-name="@c.ColorName"
-        data-hex="@c.HexCode"
-        data-extra="@((c.ExtraCost ?? 0))"      
-        data-final="@(((v?.BasePrice ?? 0) + (c.ExtraCost ?? 0)))">
-    Details
-</button>
-
-
-
-                                    <!-- Edit -->
+                                    <!-- EDIT -->
                                     <button type="button"
-                                            class="btn btn-sm btn-secondary me-1"
+                                            class="btn btn-sm btn-outline-primary me-2"
                                             data-bs-toggle="modal"
                                             data-bs-target="#carEditModal"
-                                            data-model-id="@m?.ModelId"
+                                            data-model-id="@(m?.ModelId ?? 0)"
+                                            data-version-id="@(v?.VersionId ?? 0)"
+                                            data-color-id="@c.ColorId"  
                                             data-model-name="@m?.ModelName"
                                             data-model-seg="@m?.Segment"
                                             data-model-desc="@m?.Description"
-                                            data-version-id="@v?.VersionId"
                                             data-version-name="@v?.VersionName"
-                                            data-batt="@v?.BatteryCapacity"
+                                            data-batt="@((v?.BatteryCapacity)?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))"
                                             data-range="@v?.RangeKm"
                                             data-seat="@v?.Seat"
-                                            data-base="@basePrice"
-                                            data-color-id="@c.ColorId"
+                                            data-base="@((v?.BasePrice)?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))"
                                             data-color-name="@c.ColorName"
-                                            data-hex="@c.HexCode"
-                                            data-extra="@extra">
+                                            data-extra="@((c?.ExtraCost)?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))"
+                                            data-qty="@qty">
                                         Edit
                                     </button>
 
-                                    <!-- Delete (xóa color = xóa 1 biến thể) -->
-                                    <form method="post" asp-page-handler="DeleteCar" class="d-inline" onsubmit="return confirm('Delete this car?');">
+                                    <!-- DELETE -->
+                                    <form method="post" asp-page-handler="DeleteCar" class="d-inline"
+                                          onsubmit="return confirm('Delete this car?');">
                                         <input type="hidden" name="colorId" value="@c.ColorId" />
                                         <button class="btn btn-sm btn-danger">Delete</button>
                                     </form>
@@ -192,170 +167,7 @@
                         }
                     </tbody>
                 </table>
-
-                <!-- Details Modal -->
-                <div class="modal fade" id="carDetailsModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">
-                                    Car Details — <span id="dModelName"></span> / <span id="dVersionName"></span>
-                                </h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <div class="card h-100">
-                                            <div class="card-header">Model</div>
-                                            <div class="card-body">
-                                                <div><strong>Name:</strong> <span id="dModelName2"></span></div>
-                                                <div><strong>Segment:</strong> <span id="dModelSeg"></span></div>
-                                                <div class="mt-2"><strong>Description</strong></div>
-                                                <div id="dModelDesc" class="text-muted small"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="card h-100">
-                                            <div class="card-header">Version</div>
-                                            <div class="card-body">
-                                                <div><strong>Name:</strong> <span id="dVersionName2"></span></div>
-                                                <div><strong>Battery:</strong> <span id="dBatt"></span> kWh</div>
-                                                <div><strong>Range:</strong> <span id="dRange"></span> km</div>
-                                                <div><strong>Seat:</strong> <span id="dSeat"></span></div>
-                                                <div><strong>Base Price:</strong> <span id="dBase"></span></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="card h-100">
-                                            <div class="card-header">Color</div>
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <strong>Name:</strong> <span id="dColorName"></span>
-                                                    <span id="dSwatch" class="d-inline-block rounded-circle border" style="width:16px;height:16px;"></span>
-                                                </div>
-                                                <div class="mt-2"><strong>Hex:</strong> <span id="dHex"></span></div>
-                                                <div><strong>Extra Cost:</strong> <span id="dExtra"></span></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <hr />
-                                <div class="d-flex justify-content-end fs-5">
-                                    <div><strong>Final Price: </strong><span id="dFinal"></span></div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-                <!-- Edit Modal -->
-                <div class="modal fade" id="carEditModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                        <div class="modal-content">
-                            <form method="post" asp-page-handler="UpdateCarFull">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Edit Car</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <input type="hidden" asp-for="EditCar.ModelId" id="eModelId" />
-                                    <input type="hidden" asp-for="EditCar.VersionId" id="eVersionId" />
-                                    <input type="hidden" asp-for="EditCar.ColorId" id="eColorId" />
-
-                                    <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <div class="card h-100">
-                                                <div class="card-header">Model</div>
-                                                <div class="card-body">
-                                                    <div class="mb-2">
-                                                        <label class="form-label">Name</label>
-                                                        <input class="form-control" asp-for="EditCar.ModelName" id="eModelName" />
-                                                    </div>
-                                                    <div class="mb-2">
-                                                        <label class="form-label">Segment</label>
-                                                        <input class="form-control" asp-for="EditCar.Segment" id="eModelSeg" />
-                                                    </div>
-                                                    <div>
-                                                        <label class="form-label">Description</label>
-                                                        <textarea class="form-control" asp-for="EditCar.Description" id="eModelDesc"></textarea>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <div class="card h-100">
-                                                <div class="card-header">Version</div>
-                                                <div class="card-body">
-                                                    <div class="mb-2">
-                                                        <label class="form-label">Name</label>
-                                                        <input class="form-control" asp-for="EditCar.VersionName" id="eVersionName" />
-                                                    </div>
-                                                    <div class="row g-2">
-                                                        <div class="col-6">
-                                                            <label class="form-label">Battery (kWh)</label>
-                                                            <input class="form-control" asp-for="EditCar.BatteryCapacity" id="eBatt" type="number" step="0.1" />
-                                                        </div>
-                                                        <div class="col-6">
-                                                            <label class="form-label">Range (km)</label>
-                                                            <input class="form-control" asp-for="EditCar.RangeKm" id="eRange" type="number" />
-                                                        </div>
-                                                    </div>
-                                                    <div class="row g-2 mt-1">
-                                                        <div class="col-6">
-                                                            <label class="form-label">Seat</label>
-                                                            <input class="form-control" asp-for="EditCar.Seat" id="eSeat" type="number" />
-                                                        </div>
-                                                        <div class="col-6">
-                                                            <label class="form-label">Base Price</label>
-                                                            <input class="form-control" asp-for="EditCar.BasePrice" id="eBase" type="number" step="1000" />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <div class="card h-100">
-                                                <div class="card-header">Color</div>
-                                                <div class="card-body">
-                                                    <div class="mb-2">
-                                                        <label class="form-label">Name</label>
-                                                        <input class="form-control" asp-for="EditCar.ColorName" id="eColorName" />
-                                                    </div>
-                                                    <div class="mb-2">
-                                                        <label class="form-label">Hex</label>
-                                                        <input class="form-control" asp-for="EditCar.HexCode" id="eHex" />
-                                                    </div>
-                                                    <div>
-                                                        <label class="form-label">Extra Cost</label>
-                                                        <input class="form-control" asp-for="EditCar.ExtraCost" id="eExtra" type="number" step="1000" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div> <!-- row -->
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="submit" class="btn btn-success">Save changes</button>
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <!-- /Edit Modal -->
-
             </div>
         </div>
     </div>
 </div>
-
-

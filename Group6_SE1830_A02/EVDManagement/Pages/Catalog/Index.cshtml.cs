@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.SignalR;
-using EVDManagement.SignalR;
 using BLL.IServices;
 using BLL.DTOs;
+using EVDManagement.SignalR;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace EVDManagement.Pages.Catalog
 {
@@ -12,13 +13,20 @@ namespace EVDManagement.Pages.Catalog
         private readonly IModelService _modelSvc;
         private readonly IVersionService _versionSvc;
         private readonly IColorService _colorSvc;
+        private readonly IInventoryService _inventorySvc;
         private readonly IHubContext<ModelHub> _hub;
 
-        public IndexModel(IModelService modelSvc, IVersionService versionSvc, IColorService colorSvc, IHubContext<ModelHub> hub)
+        public IndexModel(
+            IModelService modelSvc,
+            IVersionService versionSvc,
+            IColorService colorSvc,
+            IInventoryService inventorySvc,
+            IHubContext<ModelHub> hub)
         {
             _modelSvc = modelSvc;
             _versionSvc = versionSvc;
             _colorSvc = colorSvc;
+            _inventorySvc = inventorySvc;
             _hub = hub;
         }
 
@@ -26,332 +34,318 @@ namespace EVDManagement.Pages.Catalog
         public List<VersionDto> Versions { get; set; } = new();
         public List<ColorDto> Colors { get; set; } = new();
 
-        // ---- Cars input (create) ----
-        public class CarInputDto
+        // Map quantity theo (VersionId, ColorId)
+        public Dictionary<(int VersionId, int ColorId), int> InventoryMap { get; set; } = new();
+
+        // ===== Create form =====
+        public class CreateCarInput
         {
-            public int? ExistingModelId { get; set; }
-            public string? NewModelName { get; set; }
-            public string? NewModelSegment { get; set; }
-            public string? NewModelDescription { get; set; }
+            [BindProperty] public string? ModelName { get; set; }
+            [BindProperty] public string? ModelSegment { get; set; }
+            [BindProperty] public string? ModelDescription { get; set; }
 
-            public int? ExistingVersionId { get; set; }
-            public string? NewVersionName { get; set; }
-            public decimal? NewBatteryCapacity { get; set; }
-            public int? NewRangeKm { get; set; }
-            public int? NewSeat { get; set; }
-            public decimal? NewBasePrice { get; set; }
+            [BindProperty] public string? VersionName { get; set; }
+            [BindProperty] public decimal? BatteryCapacity { get; set; }
+            [BindProperty] public int? RangeKm { get; set; }
+            [BindProperty] public int? Seat { get; set; }
+            [BindProperty] public decimal? BasePrice { get; set; }
 
-            public int? ExistingColorId { get; set; }
-            public string? NewColorName { get; set; }
-            public string? NewHexCode { get; set; }
-            public decimal? NewExtraCost { get; set; }
+            [BindProperty] public string? ColorName { get; set; }
+
+            [BindProperty] public decimal? ExtraCost { get; set; }
+            [BindProperty] public int? Quantity { get; set; }
         }
-        [BindProperty] public CarInputDto CarInput { get; set; } = new();
+        [BindProperty] public CreateCarInput CarInput { get; set; } = new();
 
-        // ---- Cars edit modal ----
+        // ===== Edit modal DTO =====
         public class EditCarDto
         {
-            public int ModelId { get; set; }
-            public int VersionId { get; set; }
-            public int ColorId { get; set; }
+            // IDs
+            [BindProperty] public int ModelId { get; set; }
+            [BindProperty] public int VersionId { get; set; }
+            [BindProperty] public int ColorId { get; set; }
 
-            public string ModelName { get; set; } = null!;
-            public string? Segment { get; set; }
-            public string? Description { get; set; }
+            // Model
+            [BindProperty] public string? ModelName { get; set; }    // đổi sang string?
+            [BindProperty] public string? Segment { get; set; }
+            [BindProperty] public string? Description { get; set; }
 
-            public string VersionName { get; set; } = null!;
-            public decimal? BatteryCapacity { get; set; }
-            public int? RangeKm { get; set; }
-            public int? Seat { get; set; }
-            public decimal BasePrice { get; set; }
+            // Version
+            [BindProperty] public string? VersionName { get; set; } // đổi sang string?
+            [BindProperty] public decimal? BatteryCapacity { get; set; }
+            [BindProperty] public int? RangeKm { get; set; }
+            [BindProperty] public int? Seat { get; set; }
+            [BindProperty] public decimal BasePrice { get; set; }
 
-            public string? ColorName { get; set; }
-            public string? HexCode { get; set; }
-            public decimal? ExtraCost { get; set; }
+            // Color
+            [BindProperty] public string? ColorName { get; set; }
+            [BindProperty] public string? HexCode { get; set; }
+            [BindProperty] public decimal? ExtraCost { get; set; }
+
+            // Inventory
+            [BindProperty] public int? Quantity { get; set; }
         }
         [BindProperty] public EditCarDto EditCar { get; set; } = new();
 
-        // ---- Models tab ----
-        [BindProperty] public ModelDto NewModel { get; set; } = new();
-        [BindProperty] public ModelDto EditModel { get; set; } = new();
+        private const decimal MAX_VND = 9_999_000_000_000M;
 
-        // ---- Versions tab ----
-        [BindProperty] public VersionDto NewVersion { get; set; } = new();
-        [BindProperty] public VersionDto EditVersion { get; set; } = new();
-
-        // ---- Colors tab ----
-        [BindProperty] public ColorDto NewColor { get; set; } = new();
-        [BindProperty] public ColorDto EditColor { get; set; } = new();
-
-        public async Task OnGetAsync(string? activeTab = "cars")
-        {
-            ViewData["ActiveTab"] = activeTab ?? "cars";
-            await LoadAllAsync();
-        }
+        public async Task OnGetAsync() => await LoadAllAsync();
 
         private async Task LoadAllAsync()
         {
             Models = await _modelSvc.GetAllAsync();
             Versions = await _versionSvc.GetAllAsync();
             Colors = await _colorSvc.GetAllAsync();
+
+            InventoryMap.Clear();
+            var invs = await _inventorySvc.GetAllAsync();
+            foreach (var it in invs)
+            {
+                var qty = it.Quantity ?? 0;
+                var key = (it.VersionId, it.ColorId);
+                if (InventoryMap.ContainsKey(key)) InventoryMap[key] += qty;
+                else InventoryMap[key] = qty;
+            }
         }
 
-        // ========== Cars ==========
+        // ===== Upsert helpers =====
+        private async Task<ModelDto> GetOrCreateModelByNameAsync(string name, string? seg, string? desc)
+        {
+            var all = Models.Count == 0 ? await _modelSvc.GetAllAsync() : Models;
+            var found = all.FirstOrDefault(m => string.Equals(m.ModelName?.Trim(), name.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (found != null)
+            {
+                var changed = false;
+                if (!string.IsNullOrWhiteSpace(seg) && seg != found.Segment) { found.Segment = seg; changed = true; }
+                if (!string.IsNullOrWhiteSpace(desc) && desc != found.Description) { found.Description = desc; changed = true; }
+                if (changed) await _modelSvc.UpdateAsync(found);
+                return found;
+            }
+            return await _modelSvc.CreateAsync(new ModelDto
+            {
+                ModelName = name.Trim(),
+                Segment = string.IsNullOrWhiteSpace(seg) ? null : seg.Trim(),
+                Description = string.IsNullOrWhiteSpace(desc) ? null : desc.Trim()
+            });
+        }
+
+        private async Task<VersionDto> GetOrCreateVersionByNameAsync(int modelId, string versionName,
+            decimal? battery, int? range, int? seat, decimal basePrice)
+        {
+            var all = Versions.Count == 0 ? await _versionSvc.GetAllAsync() : Versions;
+            var found = all.FirstOrDefault(v => v.ModelId == modelId &&
+                string.Equals(v.VersionName?.Trim(), versionName.Trim(), StringComparison.OrdinalIgnoreCase));
+
+            if (found != null)
+            {
+                found.BatteryCapacity = battery;
+                found.RangeKm = range;
+                found.Seat = seat;
+                found.BasePrice = basePrice;
+                await _versionSvc.UpdateAsync(found);
+                return found;
+            }
+
+            return await _versionSvc.CreateAsync(new VersionDto
+            {
+                ModelId = modelId,
+                VersionName = versionName.Trim(),
+                BatteryCapacity = battery,
+                RangeKm = range,
+                Seat = seat,
+                BasePrice = basePrice
+            });
+        }
+
+        private async Task<ColorDto> GetOrCreateColorByNameAsync(int versionId, string colorName, decimal? extra)
+        {
+            var all = Colors.Count == 0 ? await _colorSvc.GetAllAsync() : Colors;
+            var found = all.FirstOrDefault(c => c.VersionId == versionId &&
+                string.Equals(c.ColorName?.Trim(), colorName.Trim(), StringComparison.OrdinalIgnoreCase));
+
+            if (found != null)
+            {
+                found.ExtraCost = extra;
+                found.HexCode = null; // bỏ Hex theo yêu cầu
+                await _colorSvc.UpdateAsync(found);
+                return found;
+            }
+
+            return await _colorSvc.CreateAsync(new ColorDto
+            {
+                VersionId = versionId,
+                ColorName = colorName.Trim(),
+                HexCode = null,
+                ExtraCost = extra ?? 0
+            });
+        }
+
+        // ===== CREATE =====
         public async Task<IActionResult> OnPostSaveCarAsync()
         {
-            // ---- VALIDATION KẾT HỢP ----
-            // Model: phải chọn ExistingModelId hoặc nhập NewModelName
-            if (!CarInput.ExistingModelId.HasValue && string.IsNullOrWhiteSpace(CarInput.NewModelName))
-                ModelState.AddModelError(string.Empty, "Please select a model or enter a new model name.");
-
-            // Version: phải chọn ExistingVersionId hoặc nhập NewVersionName
-            if (!CarInput.ExistingVersionId.HasValue && string.IsNullOrWhiteSpace(CarInput.NewVersionName))
-                ModelState.AddModelError(string.Empty, "Please select a version or enter a new version name.");
-
-            // Nếu tạo Version mới mà BasePrice rỗng -> bắt buộc
-            if (!CarInput.ExistingVersionId.HasValue && !CarInput.NewBasePrice.HasValue)
-                ModelState.AddModelError(nameof(CarInput.NewBasePrice), "Base price is required for a new version.");
-
-            // Color: phải chọn ExistingColorId hoặc nhập NewColorName
-            if (!CarInput.ExistingColorId.HasValue && string.IsNullOrWhiteSpace(CarInput.NewColorName))
-                ModelState.AddModelError(string.Empty, "Please select a color or enter a new color name.");
+            if (string.IsNullOrWhiteSpace(CarInput.ModelName))
+                ModelState.AddModelError("CarInput.ModelName", "Model name is required.");
+            if (string.IsNullOrWhiteSpace(CarInput.VersionName))
+                ModelState.AddModelError("CarInput.VersionName", "Version name is required.");
+            if (!CarInput.BatteryCapacity.HasValue)
+                ModelState.AddModelError("CarInput.BatteryCapacity", "Battery capacity is required.");
+            if (!CarInput.RangeKm.HasValue)
+                ModelState.AddModelError("CarInput.RangeKm", "Range (km) is required.");
+            if (!CarInput.Seat.HasValue)
+                ModelState.AddModelError("CarInput.Seat", "Seat is required.");
+            if (!CarInput.BasePrice.HasValue)
+                ModelState.AddModelError("CarInput.BasePrice", "Base price is required.");
+            else if (CarInput.BasePrice < 0 || CarInput.BasePrice > MAX_VND)
+                ModelState.AddModelError("CarInput.BasePrice", $"Base price must be between 0 and {MAX_VND:N0}.");
+            if (string.IsNullOrWhiteSpace(CarInput.ColorName))
+                ModelState.AddModelError("CarInput.ColorName", "Color name is required.");
+            if (!CarInput.ExtraCost.HasValue)
+                ModelState.AddModelError("CarInput.ExtraCost", "Extra price is required.");
+            else if (CarInput.ExtraCost < 0 || CarInput.ExtraCost > MAX_VND)
+                ModelState.AddModelError("CarInput.ExtraCost", $"Extra price must be between 0 and {MAX_VND:N0}.");
+            if (!CarInput.Quantity.HasValue)
+                ModelState.AddModelError("CarInput.Quantity", "Quantity is required.");
+            else if (CarInput.Quantity < 0)
+                ModelState.AddModelError("CarInput.Quantity", "Quantity cannot be negative.");
 
             if (!ModelState.IsValid)
             {
-                ViewData["ActiveTab"] = "cars";
                 await LoadAllAsync();
                 return Page();
             }
 
-            // ---- TẠO / GÁN MODEL ----
-            int modelId;
-            if (CarInput.ExistingModelId.HasValue)
+            try
             {
-                modelId = CarInput.ExistingModelId.Value;
+                var model = await GetOrCreateModelByNameAsync(
+                    CarInput.ModelName!, CarInput.ModelSegment, CarInput.ModelDescription);
 
-                // Nếu có nhập Segment/Description mới -> cập nhật nhẹ model đang chọn
-                if (!string.IsNullOrWhiteSpace(CarInput.NewModelSegment) || !string.IsNullOrWhiteSpace(CarInput.NewModelDescription))
+                var version = await GetOrCreateVersionByNameAsync(
+                    model.ModelId,
+                    CarInput.VersionName!,
+                    CarInput.BatteryCapacity,
+                    CarInput.RangeKm,
+                    CarInput.Seat,
+                    CarInput.BasePrice!.Value);
+
+                var color = await GetOrCreateColorByNameAsync(
+                    version.VersionId,
+                    CarInput.ColorName!,
+                    CarInput.ExtraCost);
+
+                await _inventorySvc.CreateAsync(new InventoryDto
                 {
-                    var mm = await _modelSvc.GetByIdAsync(modelId);
-                    if (mm != null)
-                    {
-                        if (!string.IsNullOrWhiteSpace(CarInput.NewModelSegment)) mm.Segment = CarInput.NewModelSegment;
-                        if (!string.IsNullOrWhiteSpace(CarInput.NewModelDescription)) mm.Description = CarInput.NewModelDescription;
-                        await _modelSvc.UpdateAsync(mm);
-                    }
-                }
-            }
-            else
-            {
-                var created = await _modelSvc.CreateAsync(new ModelDto
-                {
-                    ModelName = CarInput.NewModelName!.Trim(),
-                    Segment = string.IsNullOrWhiteSpace(CarInput.NewModelSegment) ? null : CarInput.NewModelSegment!.Trim(),
-                    Description = string.IsNullOrWhiteSpace(CarInput.NewModelDescription) ? null : CarInput.NewModelDescription!.Trim()
+                    VersionId = version.VersionId,
+                    ColorId = color.ColorId,
+                    Quantity = CarInput.Quantity
                 });
-                modelId = created.ModelId;
-            }
 
-            // ---- TẠO / GÁN VERSION ----
-            int versionId;
-            if (CarInput.ExistingVersionId.HasValue)
+                TempData["Msg"] = "Car created successfully!";
+                await _hub.Clients.All.SendAsync("CatalogChanged");
+                return RedirectToPage();
+            }
+            catch (Exception ex)
             {
-                var v = await _versionSvc.GetByIdAsync(CarInput.ExistingVersionId.Value);
-                if (v == null) { TempData["Msg"] = "Version not found."; return RedirectToPage(new { activeTab = "cars" }); }
-
-                // gán sang model vừa chọn/tạo
-                v.ModelId = modelId;
-
-                // nếu có override field mới -> cập nhật
-                if (!string.IsNullOrWhiteSpace(CarInput.NewVersionName)) v.VersionName = CarInput.NewVersionName!.Trim();
-                if (CarInput.NewBatteryCapacity.HasValue) v.BatteryCapacity = CarInput.NewBatteryCapacity;
-                if (CarInput.NewRangeKm.HasValue) v.RangeKm = CarInput.NewRangeKm;
-                if (CarInput.NewSeat.HasValue) v.Seat = CarInput.NewSeat;
-                if (CarInput.NewBasePrice.HasValue) v.BasePrice = CarInput.NewBasePrice.Value;
-
-                await _versionSvc.UpdateAsync(v);
-                versionId = v.VersionId;
+                ModelState.AddModelError(string.Empty, ex.Message);
+                await LoadAllAsync();
+                return Page();
             }
-            else
-            {
-                var createdV = await _versionSvc.CreateAsync(new VersionDto
-                {
-                    ModelId = modelId,
-                    VersionName = CarInput.NewVersionName!.Trim(),
-                    BatteryCapacity = CarInput.NewBatteryCapacity,
-                    RangeKm = CarInput.NewRangeKm,
-                    Seat = CarInput.NewSeat,
-                    BasePrice = CarInput.NewBasePrice!.Value
-                });
-                versionId = createdV.VersionId;
-            }
-
-            // ---- TẠO / GÁN COLOR ----
-            if (CarInput.ExistingColorId.HasValue)
-            {
-                var c = await _colorSvc.GetByIdAsync(CarInput.ExistingColorId.Value);
-                if (c != null)
-                {
-                    c.VersionId = versionId;
-                    if (!string.IsNullOrWhiteSpace(CarInput.NewColorName)) c.ColorName = CarInput.NewColorName!.Trim();
-                    if (!string.IsNullOrWhiteSpace(CarInput.NewHexCode)) c.HexCode = CarInput.NewHexCode!.Trim();
-                    if (CarInput.NewExtraCost.HasValue) c.ExtraCost = CarInput.NewExtraCost;
-                    await _colorSvc.UpdateAsync(c);
-                }
-            }
-            else
-            {
-                await _colorSvc.CreateAsync(new ColorDto
-                {
-                    VersionId = versionId,
-                    ColorName = CarInput.NewColorName!.Trim(),
-                    HexCode = string.IsNullOrWhiteSpace(CarInput.NewHexCode) ? null : CarInput.NewHexCode!.Trim(),
-                    ExtraCost = CarInput.NewExtraCost ?? 0
-                });
-            }
-
-            TempData["Msg"] = "Car created successfully!";
-            await _hub.Clients.All.SendAsync("CatalogChanged");
-            return RedirectToPage(new { activeTab = "cars" });
         }
 
+        // ===== UPDATE (Edit modal) =====
         public async Task<IActionResult> OnPostUpdateCarFullAsync()
         {
-            var m = await _modelSvc.GetByIdAsync(EditCar.ModelId);
-            if (m == null) { TempData["Msg"] = "Model not found."; return RedirectToPage(new { activeTab = "cars" }); }
-            m.ModelName = EditCar.ModelName; m.Segment = EditCar.Segment; m.Description = EditCar.Description;
-            await _modelSvc.UpdateAsync(m);
+            if (EditCar == null)
+            {
+                ModelState.AddModelError(string.Empty, "Invalid input.");
+                await LoadAllAsync();
+                return Page();
+            }
 
-            var v = await _versionSvc.GetByIdAsync(EditCar.VersionId);
-            if (v == null) { TempData["Msg"] = "Version not found."; return RedirectToPage(new { activeTab = "cars" }); }
-            v.ModelId = EditCar.ModelId;
-            v.VersionName = EditCar.VersionName;
-            v.BatteryCapacity = EditCar.BatteryCapacity;
-            v.RangeKm = EditCar.RangeKm;
-            v.Seat = EditCar.Seat;
-            v.BasePrice = EditCar.BasePrice;
-            await _versionSvc.UpdateAsync(v);
+            try
+            {
+                var model = await _modelSvc.GetByIdAsync(EditCar.ModelId)
+                            ?? throw new KeyNotFoundException("Model not found.");
+                model.ModelName = EditCar.ModelName;
+                model.Segment = EditCar.Segment;
+                model.Description = EditCar.Description;
+                await _modelSvc.UpdateAsync(model);
 
-            var c = await _colorSvc.GetByIdAsync(EditCar.ColorId);
-            if (c == null) { TempData["Msg"] = "Color not found."; return RedirectToPage(new { activeTab = "cars" }); }
-            c.VersionId = EditCar.VersionId;
-            c.ColorName = EditCar.ColorName;
-            c.HexCode = EditCar.HexCode;
-            c.ExtraCost = EditCar.ExtraCost;
-            await _colorSvc.UpdateAsync(c);
+                var version = await _versionSvc.GetByIdAsync(EditCar.VersionId)
+                              ?? throw new KeyNotFoundException("Version not found.");
+                version.ModelId = EditCar.ModelId;
+                version.VersionName = EditCar.VersionName;
+                version.BatteryCapacity = EditCar.BatteryCapacity;
+                version.RangeKm = EditCar.RangeKm;
+                version.Seat = EditCar.Seat;
+                version.BasePrice = EditCar.BasePrice;
+                await _versionSvc.UpdateAsync(version);
 
-            TempData["Msg"] = "Car updated successfully.";
-            await _hub.Clients.All.SendAsync("CatalogChanged");
-            return RedirectToPage(new { activeTab = "cars" });
+                var color = await _colorSvc.GetByIdAsync(EditCar.ColorId)
+                            ?? throw new KeyNotFoundException("Color not found.");
+                color.VersionId = EditCar.VersionId;
+                color.ColorName = EditCar.ColorName;
+                color.HexCode = EditCar.HexCode;
+                color.ExtraCost = EditCar.ExtraCost;
+                await _colorSvc.UpdateAsync(color);
+
+                var inv = await _inventorySvc.GetByVersionColorAsync(version.VersionId, color.ColorId);
+                if (EditCar.Quantity.HasValue)
+                {
+                    if (inv != null)
+                    {
+                        inv.Quantity = EditCar.Quantity;
+                        await _inventorySvc.UpdateAsync(inv);
+                    }
+                    else
+                    {
+                        await _inventorySvc.CreateAsync(new InventoryDto
+                        {
+                            VersionId = version.VersionId,
+                            ColorId = color.ColorId,
+                            Quantity = EditCar.Quantity
+                        });
+                    }
+                }
+
+                TempData["Msg"] = "Car updated successfully.";
+                await _hub.Clients.All.SendAsync("CatalogChanged");
+                return RedirectToPage();
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                await LoadAllAsync();
+                return Page();
+            }
         }
 
+        // ===== DELETE: Xoá Inventory trước rồi xoá Color =====
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> OnPostDeleteCarAsync(int colorId)
         {
-            await _colorSvc.DeleteAsync(colorId);
-            TempData["Msg"] = "Car deleted.";
-            await _hub.Clients.All.SendAsync("CatalogChanged");
-            return RedirectToPage(new { activeTab = "cars" });
-        }
-
-        // ========== Models ==========
-        public async Task<IActionResult> OnPostCreateModelAsync()
-        {
-            if (string.IsNullOrWhiteSpace(NewModel.ModelName))
+            try
             {
-                TempData["Msg"] = "Model name is required.";
-                return RedirectToPage(new { activeTab = "models" });
+                await _inventorySvc.DeleteByColorAsync(colorId); // dọn hết inventory của màu
+                await _colorSvc.DeleteAsync(colorId);            // xoá Color
+
+                TempData["Msg"] = "Car deleted.";
+                await _hub.Clients.All.SendAsync("CatalogChanged");
+                return RedirectToPage();
             }
-            await _modelSvc.CreateAsync(NewModel);
-            TempData["Msg"] = "Model created.";
-            await _hub.Clients.All.SendAsync("CatalogChanged");
-            return RedirectToPage(new { activeTab = "models" });
-        }
-
-        public async Task<IActionResult> OnPostLoadModelAsync(int id)
-        {
-            var m = await _modelSvc.GetByIdAsync(id);
-            if (m != null) EditModel = m;
-            return RedirectToPage(new { activeTab = "models" });
-        }
-
-        public async Task<IActionResult> OnPostUpdateModelAsync()
-        {
-            await _modelSvc.UpdateAsync(EditModel);
-            TempData["Msg"] = "Model updated.";
-            await _hub.Clients.All.SendAsync("CatalogChanged");
-            return RedirectToPage(new { activeTab = "models" });
-        }
-
-        public async Task<IActionResult> OnPostDeleteModelAsync(int id)
-        {
-            await _modelSvc.DeleteAsync(id);
-            TempData["Msg"] = "Model deleted.";
-            await _hub.Clients.All.SendAsync("CatalogChanged");
-            return RedirectToPage(new { activeTab = "models" });
-        }
-
-        // ========== Versions ==========
-        public async Task<IActionResult> OnPostCreateVersionAsync()
-        {
-            await _versionSvc.CreateAsync(NewVersion);
-            TempData["Msg"] = "Version created.";
-            await _hub.Clients.All.SendAsync("CatalogChanged");
-            return RedirectToPage(new { activeTab = "versions" });
-        }
-
-        public async Task<IActionResult> OnPostLoadVersionAsync(int id)
-        {
-            var v = await _versionSvc.GetByIdAsync(id);
-            if (v != null) EditVersion = v;
-            return RedirectToPage(new { activeTab = "versions" });
-        }
-
-        public async Task<IActionResult> OnPostUpdateVersionAsync()
-        {
-            await _versionSvc.UpdateAsync(EditVersion);
-            TempData["Msg"] = "Version updated.";
-            await _hub.Clients.All.SendAsync("CatalogChanged");
-            return RedirectToPage(new { activeTab = "versions" });
-        }
-
-        public async Task<IActionResult> OnPostDeleteVersionAsync(int id)
-        {
-            await _versionSvc.DeleteAsync(id);
-            TempData["Msg"] = "Version deleted.";
-            await _hub.Clients.All.SendAsync("CatalogChanged");
-            return RedirectToPage(new { activeTab = "versions" });
-        }
-
-        // ========== Colors ==========
-        public async Task<IActionResult> OnPostCreateColorAsync()
-        {
-            await _colorSvc.CreateAsync(NewColor);
-            TempData["Msg"] = "Color created.";
-            await _hub.Clients.All.SendAsync("CatalogChanged");
-            return RedirectToPage(new { activeTab = "colors" });
-        }
-
-        public async Task<IActionResult> OnPostLoadColorAsync(int id)
-        {
-            var c = await _colorSvc.GetByIdAsync(id);
-            if (c != null) EditColor = c;
-            return RedirectToPage(new { activeTab = "colors" });
-        }
-
-        public async Task<IActionResult> OnPostUpdateColorAsync()
-        {
-            await _colorSvc.UpdateAsync(EditColor);
-            TempData["Msg"] = "Color updated.";
-            await _hub.Clients.All.SendAsync("CatalogChanged");
-            return RedirectToPage(new { activeTab = "colors" });
-        }
-
-        public async Task<IActionResult> OnPostDeleteColorAsync(int id)
-        {
-            await _colorSvc.DeleteAsync(id);
-            TempData["Msg"] = "Color deleted.";
-            await _hub.Clients.All.SendAsync("CatalogChanged");
-            return RedirectToPage(new { activeTab = "colors" });
+            catch (DbUpdateException ex)
+            {
+                var inner = ex.InnerException?.Message ?? ex.Message;
+                if (inner.Contains("OrderDetails", StringComparison.OrdinalIgnoreCase))
+                    TempData["Msg"] = "Không thể xoá vì màu này đã được dùng trong đơn hàng (OrderDetails).";
+                else
+                    TempData["Msg"] = $"Delete failed: {inner}";
+                return RedirectToPage();
+            }
+            catch (Exception ex)
+            {
+                TempData["Msg"] = ex.Message;
+                return RedirectToPage();
+            }
         }
     }
 }

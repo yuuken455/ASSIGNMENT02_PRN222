@@ -29,29 +29,29 @@ namespace BLL.Services
 
         // ================== READ ==================
 
-        public async Task<List<TestDriveAppointmentDto>> GetAllAsync()
+        public async Task<List<TestDriveAppointmentDTO>> GetAllAsync()
         {
             var list = await _repo.GetAllAppointments();
-            return list.Select(_mapper.Map<TestDriveAppointmentDto>).ToList();
+            return list.Select(_mapper.Map<TestDriveAppointmentDTO>).ToList();
         }
 
-        public async Task<List<TestDriveAppointmentDto>> GetByDayAsync(DateTime date)
+        public async Task<List<TestDriveAppointmentDTO>> GetByDayAsync(DateTime date)
         {
             var list = await _repo.GetAppointmentsInDay(date);
-            return list.Select(_mapper.Map<TestDriveAppointmentDto>).ToList();
+            return list.Select(_mapper.Map<TestDriveAppointmentDTO>).ToList();
         }
 
-        public async Task<TestDriveAppointmentDto?> GetByIdAsync(int id)
+        public async Task<TestDriveAppointmentDTO?> GetByIdAsync(int id)
         {
             // Repo chưa có GetById -> lấy từ danh sách (đủ dùng cho Razor Page)
             var list = await _repo.GetAllAppointments();
             var e = list.FirstOrDefault(x => x.AppointmentId == id);
-            return e == null ? null : _mapper.Map<TestDriveAppointmentDto>(e);
+            return e == null ? null : _mapper.Map<TestDriveAppointmentDTO>(e);
         }
 
         // ================== WRITE ==================
 
-        public async Task<TestDriveAppointmentDto> CreateAsync(TestDriveAppointmentDto dto)
+        public async Task<TestDriveAppointmentDTO> CreateAsync(TestDriveAppointmentDTO dto)
         {
             ValidateBusiness(dto);
 
@@ -67,7 +67,7 @@ namespace BLL.Services
             await _repo.AddAsync(entity);
             await _repo.SaveAsync();
 
-            var result = _mapper.Map<TestDriveAppointmentDto>(entity);
+            var result = _mapper.Map<TestDriveAppointmentDTO>(entity);
 
             if (_notifier != null)
                 await _notifier.AppointmentCreated(result);
@@ -75,7 +75,7 @@ namespace BLL.Services
             return result;
         }
 
-        public async Task UpdateAsync(TestDriveAppointmentDto dto)
+        public async Task UpdateAsync(TestDriveAppointmentDTO dto)
         {
             ValidateBusiness(dto);
 
@@ -137,7 +137,7 @@ namespace BLL.Services
 
         // ================== BUSINESS RULES ==================
 
-        private static void ValidateBusiness(TestDriveAppointmentDto dto)
+        private static void ValidateBusiness(TestDriveAppointmentDTO dto)
         {
             // 1) Không cho đặt trong quá khứ
             if (dto.DateTime <= DateTime.Now)

@@ -10,7 +10,10 @@ namespace DAL.IRepositories
         Task UpdateAsync(Inventory entity, CancellationToken ct = default);
         Task DeleteAsync(int id, CancellationToken ct = default);
 
-        // tiện cho UI: tìm một dòng theo Version+Color
+        // Tìm Inventory theo (Version, Color)
         Task<Inventory?> GetByVersionColorAsync(int versionId, int colorId, CancellationToken ct = default);
+
+        // NEW: Xoá tất cả inventory theo ColorId (an toàn trước khi xoá Color)
+        Task DeleteByColorAsync(int colorId, CancellationToken ct = default);
     }
 }

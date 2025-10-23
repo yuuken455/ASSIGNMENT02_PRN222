@@ -15,7 +15,7 @@ namespace EVDManagement.Pages.Appointments
         }
 
         [BindProperty]
-        public TestDriveAppointmentDto Item { get; set; } = new();
+        public TestDriveAppointmentDTO Item { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync(int id)
         {
