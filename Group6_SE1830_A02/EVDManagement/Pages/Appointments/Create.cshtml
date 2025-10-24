@@ -9,53 +9,48 @@
 <form method="post" class="row g-3">
     <div asp-validation-summary="All" class="text-danger mb-2"></div>
 
-    <div class="col-md-3">
+    <div class="col-md-4">
         <label class="form-label">Khách hàng</label>
         <select asp-for="Item.CustomerId" class="form-select" required>
             <option value="">-- Chọn khách hàng --</option>
             @foreach (var c in Model.Customers)
             {
-                <option value="@c.CustomerId">@c.FullName</option>
+                var phoneText = string.IsNullOrWhiteSpace(c.Phone) ? "" : $" ({c.Phone})";
+                <option value="@c.CustomerId">@c.FullName@phoneText</option>
             }
         </select>
         <span asp-validation-for="Item.CustomerId" class="text-danger"></span>
     </div>
 
-    <!-- Mẫu xe: chỉ dùng để lọc phiên bản, KHÔNG post -->
-    <div class="col-md-3">
-        <label class="form-label">Mẫu xe</label>
-        <select id="ModelSelect" class="form-select">
-            <option value="">-- Chọn mẫu xe --</option>
-            @foreach (var m in Model.Models)
-            {
-                <option value="@m.ModelId">@m.ModelName</option>
+    <div class="col-md-8">
+        <label class="form-label">Chọn xe trong kho (Inventory)</label>
+        <!-- SelectedInventoryId chỉ để server biết option nào, còn CarVersionId/ColorId bind vào DTO -->
+        <select asp-for="SelectedInventoryId" id="InventorySelect" class="form-select" required>
+            <option value="">-- Chọn xe --</option>
+            @{
+                var grouped = Model.Inventories.GroupBy(x => new { x.ModelId, x.ModelName })
+                .OrderBy(g => g.Key.ModelName);
+                foreach (var g in grouped)
+                {
+                    <optgroup label="@g.Key.ModelName">
+                        @foreach (var inv in g)
+                        {
+                            <option value="@inv.InventoryId"
+                                    data-version="@inv.VersionId"
+                                    data-color="@inv.ColorId">
+                                @inv.Display
+                            </option>
+                        }
+                    </optgroup>
+                }
             }
         </select>
+        <div class="form-text">Ví dụ: VF8 • Eco Plus • Đỏ (x3)</div>
     </div>
 
-    <div class="col-md-3">
-        <label class="form-label">Phiên bản</label>
-        <select asp-for="Item.CarVersionId" id="VersionSelect" class="form-select" required>
-            <option value="">-- Chọn phiên bản --</option>
-            @foreach (var v in Model.Versions)
-            {
-                <option value="@v.VersionId" data-model="@v.ModelId">@v.VersionName</option>
-            }
-        </select>
-        <span asp-validation-for="Item.CarVersionId" class="text-danger"></span>
-    </div>
-
-    <div class="col-md-3">
-        <label class="form-label">Màu xe</label>
-        <select asp-for="Item.ColorId" class="form-select" required>
-            <option value="">-- Chọn màu --</option>
-            @foreach (var c in Model.Colors)
-            {
-                <option value="@c.ColorId">@c.ColorName</option>
-            }
-        </select>
-        <span asp-validation-for="Item.ColorId" class="text-danger"></span>
-    </div>
+    <!-- Hidden fields bind vào DTO -->
+    <input type="hidden" asp-for="Item.CarVersionId" />
+    <input type="hidden" asp-for="Item.ColorId" />
 
     <div class="col-md-4">
         <label class="form-label">Thời gian lái thử</label>
@@ -88,17 +83,32 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        const modelSelect = document.getElementById('ModelSelect');
-        const versionSelect = document.getElementById('VersionSelect');
+        const invSelect = document.getElementById('InventorySelect');
+        const inputVersion = document.getElementById('Item_CarVersionId');
+        const inputColor = document.getElementById('Item_ColorId');
 
-        modelSelect.addEventListener('change', () => {
-            const modelId = modelSelect.value;
-            [...versionSelect.options].forEach(opt => {
-                if (!opt.value) return;
-                const belong = opt.getAttribute('data-model');
-                opt.hidden = modelId && belong !== modelId;
-            });
-            if (versionSelect.selectedOptions[0]?.hidden) versionSelect.value = '';
+        // khi chọn Inventory, set VersionId + ColorId vào hidden để post đúng DTO
+        invSelect.addEventListener('change', () => {
+            const opt = invSelect.selectedOptions[0];
+            if (!opt) {
+                inputVersion.value = '';
+                inputColor.value = '';
+                return;
+            }
+            inputVersion.value = opt.getAttribute('data-version') || '';
+            inputColor.value = opt.getAttribute('data-color') || '';
         });
+
+        // khôi phục lựa chọn nếu ModelState invalid
+        (function restoreSelection() {
+            const v = inputVersion.value;
+            const c = inputColor.value;
+            if (v && c) {
+                const target = [...invSelect.options].find(o =>
+                    o.getAttribute('data-version') === v && o.getAttribute('data-color') === c
+                );
+                if (target) invSelect.value = target.value;
+            }
+        })();
     </script>
 }

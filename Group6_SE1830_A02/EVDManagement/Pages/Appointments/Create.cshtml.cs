@@ -8,32 +8,58 @@ namespace EVDManagement.Pages.Appointments
     public class CreateModel : PageModel
     {
         private readonly ITestDriveAppointmentService _svc;
+        private readonly IInventoryService _inventorySvc;
         private readonly IVersionService _versionSvc;
+        private readonly IModelService _modelSvc;
         private readonly IColorService _colorSvc;
         private readonly ICustomerService _customerSvc;
-        private readonly IModelService _modelSvc;
 
         public CreateModel(
             ITestDriveAppointmentService svc,
+            IInventoryService inventorySvc,
             IVersionService versionSvc,
+            IModelService modelSvc,
             IColorService colorSvc,
-            ICustomerService customerSvc,
-            IModelService modelSvc)
+            ICustomerService customerSvc)
         {
             _svc = svc;
+            _inventorySvc = inventorySvc;
             _versionSvc = versionSvc;
+            _modelSvc = modelSvc;
             _colorSvc = colorSvc;
             _customerSvc = customerSvc;
-            _modelSvc = modelSvc;
         }
 
         [BindProperty]
         public TestDriveAppointmentDTO Item { get; set; } = new();
 
-        public IEnumerable<dynamic> Versions { get; set; } = Enumerable.Empty<dynamic>();
-        public IEnumerable<dynamic> Colors { get; set; } = Enumerable.Empty<dynamic>();
-        public IEnumerable<dynamic> Customers { get; set; } = Enumerable.Empty<dynamic>();
-        public IEnumerable<dynamic> Models { get; set; } = Enumerable.Empty<dynamic>();
+        // chỉ dùng để render dropdown
+        public IEnumerable<CustomerOption> Customers { get; set; } = Enumerable.Empty<CustomerOption>();
+        public IEnumerable<InventoryOption> Inventories { get; set; } = Enumerable.Empty<InventoryOption>();
+
+        // khi post, ta không cần InventoryId trong DTO, nhưng cần biết option user chọn
+        [BindProperty]
+        public int? SelectedInventoryId { get; set; }
+
+        public class CustomerOption
+        {
+            public int CustomerId { get; set; }
+            public string FullName { get; set; } = "";
+            public string? Phone { get; set; }
+        }
+
+        public class InventoryOption
+        {
+            public int InventoryId { get; set; }
+            public int VersionId { get; set; }
+            public int ColorId { get; set; }
+            public int ModelId { get; set; }
+            public string ModelName { get; set; } = "";
+            public string VersionName { get; set; } = "";
+            public string ColorName { get; set; } = "";
+            public int Quantity { get; set; }
+            public string Display => $"{ModelName} • {VersionName} • {ColorName} (x{Quantity})";
+        }
 
         public async Task OnGetAsync()
         {
@@ -42,6 +68,15 @@ namespace EVDManagement.Pages.Appointments
 
         public async Task<IActionResult> OnPostAsync()
         {
+            // đảm bảo đã chọn 1 inventory -> JS sẽ set CarVersionId/ColorId vào hidden
+            if (SelectedInventoryId is null || Item.CarVersionId == 0 || Item.ColorId == 0)
+                ModelState.AddModelError(string.Empty, "Vui lòng chọn xe trong kho.");
+
+            // kiểm tra tồn kho server-side để chắc chắn
+            var stock = await _inventorySvc.GetByVersionColorAsync(Item.CarVersionId, Item.ColorId);
+            if (stock == null || (stock.Quantity ?? 0) <= 0)
+                ModelState.AddModelError(string.Empty, "Phiên bản & màu đã hết hàng.");
+
             if (!ModelState.IsValid)
             {
                 await LoadDropdownsAsync();
@@ -64,12 +99,53 @@ namespace EVDManagement.Pages.Appointments
 
         private async Task LoadDropdownsAsync()
         {
-            Versions = (await _versionSvc.GetAllAsync()).Select(v => new { v.VersionId, v.VersionName, v.ModelId });
-            Colors = (await _colorSvc.GetAllAsync()).Select(c => new { c.ColorId, c.ColorName });
-            // Use the correct method for fetching customers
-            // Customers = (await _customerSvc.GetAllAsync()).Select(c => new { c.CustomerId, c.FullName });
-            Customers = Enumerable.Empty<dynamic>(); // Placeholder until correct method is available
-            Models = (await _modelSvc.GetAllAsync()).Select(m => new { m.ModelId, m.ModelName });
+            // Customers: Họ tên (SĐT)
+            var allCustomers = await _customerSvc.GetAllCustomersAsync();
+            Customers = allCustomers
+                .OrderBy(c => c.FullName)
+                .Select(c => new CustomerOption
+                {
+                    CustomerId = c.CustomerId,
+                    FullName = c.FullName,
+                    Phone = c.Phone
+                })
+                .ToList();
+
+            // Inventory: join Version + Model + Color, chỉ lấy >0
+            var invs = await _inventorySvc.GetAllAsync();
+            var versions = await _versionSvc.GetAllAsync();
+            var models = await _modelSvc.GetAllAsync();
+            var colors = await _colorSvc.GetAllAsync();
+
+            var vMap = versions.ToDictionary(v => v.VersionId);
+            var mMap = models.ToDictionary(m => m.ModelId);
+            var cMap = colors.ToDictionary(c => c.ColorId);
+
+            Inventories = invs
+                .Where(i => (i.Quantity ?? 0) > 0
+                            && vMap.ContainsKey(i.VersionId)
+                            && cMap.ContainsKey(i.ColorId)
+                            && mMap.ContainsKey(vMap[i.VersionId].ModelId))
+                .Select(i =>
+                {
+                    var v = vMap[i.VersionId];
+                    var m = mMap[v.ModelId];
+                    var c = cMap[i.ColorId];
+                    return new InventoryOption
+                    {
+                        InventoryId = i.InventoryId,
+                        VersionId = v.VersionId,
+                        ColorId = c.ColorId,
+                        ModelId = m.ModelId,
+                        ModelName = m.ModelName,
+                        VersionName = v.VersionName,
+                        ColorName = c.ColorName,
+                        Quantity = i.Quantity ?? 0
+                    };
+                })
+                // nếu bảng Inventory có thể trùng VersionId-ColorId ở nhiều dòng thì vẫn hiển thị theo InventoryId riêng biệt
+                .OrderBy(x => x.ModelName).ThenBy(x => x.VersionName).ThenBy(x => x.ColorName)
+                .ToList();
         }
     }
 }
