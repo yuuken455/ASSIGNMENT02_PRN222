@@ -20,7 +20,11 @@ namespace BLL.Mappings
 
             // 🟩 Customer mappings
             CreateMap<DALCustomer, CustomerDTO>().ReverseMap();
-            CreateMap<CreateCustomerDTO, DALCustomer>();
+
+            // Create rõ ràng bỏ map Id để DB tự sinh
+            CreateMap<CreateCustomerDTO, DALCustomer>()
+                .ForMember(d => d.CustomerId, opt => opt.Ignore());
+
             CreateMap<UpdateCustomerDTO, DALCustomer>();
             CreateMap<CustomerDTO, UpdateCustomerDTO>().ReverseMap();
 

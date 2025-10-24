@@ -1,62 +1,38 @@
-using BLL.DTOs.CustomerDTOs;
+﻿using BLL.DTOs.CustomerDTOs;
 using BLL.IServices;
-using EVDManagement.SignalR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.SignalR;
 
 namespace EVDManagement.Pages.Customers
 {
     public class CreateModel : PageModel
     {
         private readonly ICustomerService _customerService;
-        private readonly IHubContext<CustomerHub> _hubContext;
 
-        public CreateModel(ICustomerService customerService, IHubContext<CustomerHub> hubContext)
+        public CreateModel(ICustomerService customerService)
         {
             _customerService = customerService;
-            _hubContext = hubContext;
         }
 
         [BindProperty]
-        public CreateCustomerDTO Customer { get; set; } = new CreateCustomerDTO();
+        public CreateCustomerDTO Customer { get; set; } = new();
 
-        public void OnGet()
-        {
-        }
+        public void OnGet() { }
 
-        public async Task<IActionResult> OnPost()
+        public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
-            {
                 return Page();
-            }
 
             try
             {
-                // Replace this line:
-                // await _customerService.AddCustomerAsync(Customer);
-
-                // With this line:
-                throw new NotImplementedException("AddCustomerAsync is not implemented in ICustomerService. Please implement this method or use an existing method.");
-
-                await _hubContext.Clients.All.SendAsync("CustomerAdded", new
-                {
-                    fullName = Customer.FullName,
-                    phone = Customer.Phone,
-                    email = Customer.Email,
-                    idnumber = Customer.Idnumber,
-                    dob = Customer.Dob?.ToString("dd/MM/yyyy"),
-                    address = Customer.Address,
-                    note = Customer.Note
-                });
-
-                TempData["SuccessMessage"] = "Th�m kh�ch h�ng th�nh c�ng!";
-
-                return RedirectToPage("Create");
+                await _customerService.AddCustomerAsync(Customer);
+                TempData["SuccessMessage"] = "Thêm khách hàng thành công!";
+                return RedirectToPage("Index");
             }
             catch (Exception ex)
             {
+                // gom tất cả lỗi từ Service hiển thị ra Validation summary
                 ModelState.AddModelError(string.Empty, ex.Message);
                 return Page();
             }
