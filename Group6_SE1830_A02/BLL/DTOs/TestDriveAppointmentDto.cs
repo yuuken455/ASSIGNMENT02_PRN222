@@ -39,5 +39,9 @@ namespace BLL.DTOs
         public int? ModelId { get; set; }
         public string? VersionName { get; set; }
         public string? ColorName { get; set; }
+
+        // ✅ THÊM 2 TRƯỜNG MỚI
+        public string? CustomerPhone { get; set; }
+        public string? CustomerIdnumber { get; set; }
     }
 }
