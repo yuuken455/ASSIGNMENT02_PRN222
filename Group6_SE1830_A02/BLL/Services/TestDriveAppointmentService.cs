@@ -83,28 +83,76 @@ namespace BLL.Services
                 dto.CarVersionId, dto.ColorId, dto.DateTime,
                 durationMinutes: 60, bufferMinutes: 15,
                 excludeAppointmentId: dto.AppointmentId);
-
             if (overlap)
-                throw new ArgumentException("Lịch hẹn bị trùng thời gian với một lịch khác.");
+                throw new ArgumentException("Lịch hẹn bị trùng thời gian với một lịch khác của xe này.");
 
-            // Cách an toàn: load entity rồi set scalar/FK (tránh navigation bị Attach sai)
-            var all = await _repo.GetAllAppointments();
-            var entity = all.FirstOrDefault(x => x.AppointmentId == dto.AppointmentId);
-            if (entity == null)
-                throw new InvalidOperationException("Không tìm thấy lịch hẹn.");
+            // ✅ Trùng lịch theo KHÁCH HÀNG (không cho một khách có 2 lịch chồng nhau)
+            var customerOverlap = await _repo.ExistsCustomerOverlapAsync(
+                dto.CustomerId, dto.DateTime, durationMinutes: 60, bufferMinutes: 0,
+                excludeAppointmentId: dto.AppointmentId);
+            if (customerOverlap)
+                throw new ArgumentException("Khách hàng đã có lịch trong khung giờ này (phải cách nhau ít nhất 1 tiếng).");
 
+            var entity = await _repo.GetByIdAsync(dto.AppointmentId)
+                         ?? throw new InvalidOperationException("Không tìm thấy lịch hẹn.");
+
+            // ================== ✅ VALIDATE STATUS TRANSITION ==================
+            var oldStatus = NormalizeStatus(entity.Status);
+            var newStatus = NormalizeStatus(dto.Status);
+
+            if (!IsValidTransition(oldStatus, newStatus))
+            {
+                throw new ArgumentException(
+                    $"Không thể đổi trạng thái từ '{oldStatus}' sang '{newStatus}'.");
+            }
+            // =================================================================
+
+            // cập nhật scalar/FK
             entity.CustomerId = dto.CustomerId;
             entity.CarVersionId = dto.CarVersionId;
             entity.ColorId = dto.ColorId;
             entity.DateTime = dto.DateTime;
-            entity.Status = dto.Status;
+            entity.Status = newStatus;   // dùng status đã normalize
             entity.Feedback = dto.Feedback;
 
             _repo.Update(entity);
             await _repo.SaveAsync();
 
-            if (_notifier != null)
-                await _notifier.AppointmentUpdated(dto);
+            if (_notifier != null) await _notifier.AppointmentUpdated(dto);
+        }
+
+        // Helper: chuẩn hoá status (viết hoa chuẩn, tránh lệch chữ thường/hoa)
+        private static string NormalizeStatus(string? s)
+        {
+            var x = (s ?? "").Trim().ToLowerInvariant();
+            return x switch
+            {
+                "pending" => "Pending",
+                "scheduled" => "Scheduled",
+                "completed" => "Completed",
+                "cancelled" => "Cancelled",
+                _ => "Pending"
+            };
+        }
+
+        // Helper: luật chuyển trạng thái
+        private static bool IsValidTransition(string from, string to)
+        {
+            if (from == to) return true; // không đổi là hợp lệ
+
+            // Đã complete/cancelled thì KHÔNG cho đổi nữa
+            if (from == "Completed" || from == "Cancelled")
+                return false;
+
+            // Cho phép đi tới đúng bước kế tiếp hoặc hủy (nếu chưa xong)
+            return (from, to) switch
+            {
+                ("Pending", "Scheduled") => true,
+                ("Scheduled", "Completed") => true,
+                ("Pending", "Cancelled") => true,
+                ("Scheduled", "Cancelled") => true,
+                _ => false
+            };
         }
 
         public async Task DeleteAsync(int id)

@@ -73,6 +73,6 @@ app.MapRazorPages();
 app.MapHub<CustomerHub>("/customerHub");
 
 // >>> Map SignalR hubs
-app.MapHub<ModelHub>("/hubs/models"); // <— thêm endpoint (đổi tên/đường dẫn tùy bạn)
+app.MapHub<ModelHub>("/hubs/models"); 
 
 app.Run();

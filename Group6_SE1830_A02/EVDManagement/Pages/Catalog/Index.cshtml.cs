@@ -325,8 +325,8 @@ namespace EVDManagement.Pages.Catalog
         {
             try
             {
-                await _inventorySvc.DeleteByColorAsync(colorId); // dọn hết inventory của màu
-                await _colorSvc.DeleteAsync(colorId);            // xoá Color
+                await _inventorySvc.DeleteByColorAsync(colorId);
+                await _colorSvc.DeleteAsync(colorId);           
 
                 TempData["Msg"] = "Car deleted.";
                 await _hub.Clients.All.SendAsync("CatalogChanged");
@@ -336,7 +336,7 @@ namespace EVDManagement.Pages.Catalog
             {
                 var inner = ex.InnerException?.Message ?? ex.Message;
                 if (inner.Contains("OrderDetails", StringComparison.OrdinalIgnoreCase))
-                    TempData["Msg"] = "Không thể xoá vì màu này đã được dùng trong đơn hàng (OrderDetails).";
+                    TempData["Msg"] = "Không thể xoá vì mẫu này đã được dùng trong đơn hàng (OrderDetails).";
                 else
                     TempData["Msg"] = $"Delete failed: {inner}";
                 return RedirectToPage();
